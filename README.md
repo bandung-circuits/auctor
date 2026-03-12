@@ -96,8 +96,8 @@ auctor/
 │       ├── run-log.md           # Run metadata and progress log
 │       ├── materials/           # Central materials library (full texts, shared across all stages)
 │       │   ├── index.md         # URL-based index for dedup and quick lookup
-│       │   ├── SRC-001.md        # Source files (global sequential IDs)
-│       │   ├── SRC-002.md        # Same library for all stages
+│       │   ├── SRC-A-001.md      # Source files (namespaced by angle/group, e.g., SRC-A-001, SRC-Q1-001)
+│       │   ├── SRC-A-002.md      # Same library for all stages, no cross-agent filename collisions
 │       │   └── ...
 │       ├── 01.research/         # Group 00: angle-specific excerpts (10 angles)
 │       ├── 02.summary/          # Group 00: initial summary

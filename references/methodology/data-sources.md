@@ -59,10 +59,13 @@
 
 ## Data Recording Format
 
-Each collected source is saved as a separate file in the central materials library (`materials/SRC-NNN.md`):
+Each collected source is saved as a separate file in the central materials library, using **namespaced IDs** to avoid collisions between parallel researchers:
+
+- Stage 1 (background research): `SRC-{ANGLE_LETTER}-NNN` (e.g., `SRC-A-001`, `SRC-B-003`)
+- Stage 5 (deep research): `SRC-{GROUP_ID}-NNN` (e.g., `SRC-Q1-001`, `SRC-Q2-005`)
 
 ```markdown
-# [SRC-{NNN}] Title
+# [SRC-{PREFIX}-{NNN}] Title
 
 **Source URL**: [URL that was actually fetched]
 **Fetch Time**: [ISO 8601 timestamp]
@@ -74,6 +77,6 @@ Each collected source is saved as a separate file in the central materials libra
 [Complete content from fetch, preserved verbatim]
 ```
 
-Source files use global sequential IDs (SRC-001, SRC-002, ...) independent of which research angle collected them. Angle-specific excerpts reference sources by their SRC-NNN ID.
+Each researcher owns its own namespace, so parallel agents never collide on filenames. The materials library is shared: excerpts from any angle or question group can reference any SRC ID.
 
 **Important**: Do NOT summarize or extract during collection. Save complete original content. Analysis is performed by downstream agents.

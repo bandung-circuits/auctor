@@ -10,6 +10,8 @@ The most rigorous recent scholarship confirms what the capital trail has always 
 
 The capital trail leads to specific, still-functioning institutions. Lloyd's of London, which dominated shipping insurance from the 1730s, made enormous profits extending insurance to slave voyages and insuring enslaved people as cargo. A 2023 Johns Hopkins University study concluded that the financial architectures developed at Lloyd's "helped maintain the institution of slavery."[^8] When slavery was abolished in the British Empire in 1833, the government borrowed 20 million pounds to compensate not the enslaved but the slave owners. The Rothschild-Montefiore syndicate raised the compensation loan, and the UCL Legacies of British Slavery database documents 487 railway investments made by 175 slave-owning individuals, accounting for over five million pounds of capital invested in at least 200 railway projects across Britain.[^9] British taxpayers were repaying the loan to compensate slave owners until 2015.[^10]
 
+![The Capital Trail: Wealth extracted from enslaved Africans fueled European industrialization](../images/capital-trail-slavery-wealth.png)
+
 Every pound invested in British railways and dockyards was a pound drained from Africa's own productive base. The capital that powered European industrialisation was precisely the capital that Africa lost — leaving the continent, as John Ross has argued, without the fixed capital stock needed to industrialise itself.[^3]
 
 The wealth gap between Africa and Europe is not an accident of development. It is a ledger entry.
@@ -17,6 +19,8 @@ The wealth gap between Africa and Europe is not an accident of development. It i
 ## The Extraction Never Stopped
 
 The logic that stripped twelve million people from a continent did not expire with abolition. It changed form. John Ross's three-phase extraction model traces an unbroken arc: the slave trade era removed Africa's most fundamental productive factor, its people; the colonial era built railways and ports designed to transport raw materials outward, not to develop indigenous manufacturing; and the post-independence era perpetuated extraction through structural adjustment, credit rating bias, and illicit financial flows.[^3]
+
+![A three-phase historical model tracing the continuous extraction of capital from Africa](../images/three-phase-extraction-model.png)
 
 The common thread across all three phases, Ross argues, is the systematic destruction of fixed capital formation — the accumulation of infrastructure, factories, machinery, and equipment that every successful industrialisation has required. While the capital extracted from enslaved labour was building the railways, dockyards, and cotton mills that powered European industrialisation, Africa's own capital stock was not merely stagnant but actively shrinking through population loss and social disintegration. The colonial infrastructure that replaced slavery was designed to move raw materials toward the coast and onward to European factories, not to develop indigenous manufacturing capacity. At independence, Africa's fixed capital stock remained extremely low — too low to support industrialisation. The structural adjustment programmes that followed then compounded the deficit: by slashing public investment, they cut the very mechanism through which a newly independent state could begin to build its capital stock. What Africa confronts today, Ross concludes, is not a deficit of capability but the direct consequence of centuries of systematic capital extraction. What it requires is a substantial increase in the share of net fixed capital formation relative to GDP — the growth driver that the data has repeatedly validated, and that the extractive architecture has repeatedly denied.[^3]
 
@@ -38,6 +42,8 @@ The Belgian court system has already exposed the contradiction in this legal rea
 
 The historical inversions compound. When slavery was abolished, European governments compensated the slave owners. As Kwesi Pratt Jr. has observed: "When slavery was finally abolished, it was not the enslaved who received reparations, but the slave owners."[^6] Britain borrowed what amounts to between 17 and 100 billion pounds in today's money.[^9] France paid 126 million gold francs, equivalent to 1.3 per cent of GNI, to compensate its slave owners in 1849.[^18] Haiti, the first nation to free itself from slavery through revolution, was forced to pay its former enslavers 150 million francs for the right to its own independence. A 2022 analysis by the New York Times estimated that Haitians paid between 22 and 44 billion dollars in today's money, a debt that crippled the nation for over a century.[^18] France recognised slavery as a crime against humanity in its Taubira law of 2001, but President Macron ruled out reparations in 2017, calling instead for "reconciliation."[^19]
 
+![Opposing legal and moral frameworks for reparations](../images/legal-frameworks-reparations.png)
+
 In the United Kingdom, Prime Minister Keir Starmer has declared that Britain will not pay reparations "now or in the future."[^19] The pursuit of justice, Pratt has countered, "is not charitable handouts but a historical obligation."[^6]
 
 ## The Geopolitical Fracture
@@ -47,6 +53,8 @@ Europe's categorical refusal is producing consequences its architects did not in
 At the 2024 Forum on China-Africa Cooperation summit in Beijing, the joint declaration explicitly "noted" the AU reparations proclamation.[^21] China's ambassador to Eritrea framed China-Africa relations through "similar suffering in recent history," emphasising that the two sides "have been united in their common goal, extending mutual assistance" in "anti-imperialist, anti-colonial and anti-hegemonic struggles."[^22] Russia's UN Deputy Permanent Representative went further, explicitly stating: "We support the decision of African Union to designate 2025 as the year of Justice for Africans and People of African Descent through Reparations."[^23]
 
 Europe's domestic politics are narrowing the window for compromise. In Portugal, far-right party Chega proposed charging the president with treason for suggesting there might be a need for reparations. In Britain, Nigel Farage called engagement "weak." In France, Macron has ruled out reparations while the far-right continues to rise.[^19] The Trump administration withdrew from the UN Permanent Forum on People of African Descent, calling it "racist."[^24]
+
+![The geopolitical alignment on reparations and alternative partnerships](../images/geopolitical-alignment-reparations.png)
 
 Belgian MEP Barbara Bonte has criticised the EU's approach as "counterproductive, pushing African partners toward more equal and respectful engagement with other global powers."[^25] At the EU-AU summit in Luanda in November 2025, leaders from both regions acknowledged the "untold suffering" caused by slavery and colonialism but stopped short of committing to reparations.[^26] Ghana's Vice President Jane Opoku-Agyemang urged EU member states to support the coming UN resolution; the response was diplomatic silence.
 

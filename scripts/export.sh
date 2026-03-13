@@ -49,14 +49,19 @@ mkdir -p "$OUTPUT_DIR"
 DOCX_TEMPLATE="${SCRIPT_DIR}/docx-template.docx"
 LATEX_HEADER="${SCRIPT_DIR}/latex-header.tex"
 
+# Run pandoc from the article directory so relative paths (../images/) resolve naturally
+ORIG_DIR="$(pwd)"
+cd "$ARTICLE_DIR"
+INPUT_BASENAME="$(basename "$INPUT_FILE")"
+
 # Export to DOCX
 echo "Exporting to DOCX..."
 if [ -f "$DOCX_TEMPLATE" ]; then
-    pandoc "$INPUT_FILE" \
+    pandoc "$INPUT_BASENAME" \
         --reference-doc="$DOCX_TEMPLATE" \
         -o "${OUTPUT_DIR}/${BASENAME}.docx"
 else
-    pandoc "$INPUT_FILE" \
+    pandoc "$INPUT_BASENAME" \
         -o "${OUTPUT_DIR}/${BASENAME}.docx"
 fi
 echo "Created: ${OUTPUT_DIR}/${BASENAME}.docx"
@@ -64,15 +69,17 @@ echo "Created: ${OUTPUT_DIR}/${BASENAME}.docx"
 # Export to PDF
 echo "Exporting to PDF..."
 if [ -f "$LATEX_HEADER" ]; then
-    pandoc "$INPUT_FILE" \
+    pandoc "$INPUT_BASENAME" \
         --pdf-engine=xelatex \
         -H "$LATEX_HEADER" \
         -o "${OUTPUT_DIR}/${BASENAME}.pdf"
 else
-    pandoc "$INPUT_FILE" \
+    pandoc "$INPUT_BASENAME" \
         --pdf-engine=xelatex \
         -o "${OUTPUT_DIR}/${BASENAME}.pdf"
 fi
 echo "Created: ${OUTPUT_DIR}/${BASENAME}.pdf"
+
+cd "$ORIG_DIR"
 
 echo "Export complete!"

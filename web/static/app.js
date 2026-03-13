@@ -24,6 +24,11 @@ async function fetchTree(projectId) {
 // --- Markdown rendering ---
 
 function renderMd(text) {
+  // Rewrite relative image paths to API URLs
+  if (currentProject) {
+    text = text.replace(/!\[([^\]]*)\]\(\.\.\/images\/([^)]+)\)/g,
+      (_, alt, file) => `![${alt}](/api/project/${currentProject}/images/${file})`);
+  }
   return marked.parse(text);
 }
 

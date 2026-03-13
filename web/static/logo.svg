@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- 背景微妙径向渐变 -->
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+
+    <!-- A字母金属渐变 -->
+    <linearGradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0f0f0"/>
+      <stop offset="15%" stop-color="#e8e8e8"/>
+      <stop offset="40%" stop-color="#d0d0d0"/>
+      <stop offset="60%" stop-color="#c8c8c8"/>
+      <stop offset="80%" stop-color="#b8b8b8"/>
+      <stop offset="100%" stop-color="#a0a0a0"/>
+    </linearGradient>
+
+    <!-- 斜面浮雕滤镜 -->
+    <filter id="bevel" x="-10%" y="-10%" width="125%" height="130%">
+      <!-- 亮边：左上 -->
+      <feFlood flood-color="#ffffff" flood-opacity="0.8" result="white"/>
+      <feComposite in="white" in2="SourceAlpha" operator="in" result="whiteShape"/>
+      <feOffset in="SourceAlpha" dx="-4" dy="-4" result="shiftUp"/>
+      <feComposite in="whiteShape" in2="shiftUp" operator="out" result="topEdge"/>
+      <feGaussianBlur in="topEdge" stdDeviation="3" result="topEdgeBlur"/>
+
+      <!-- 暗边：右下 -->
+      <feFlood flood-color="#000000" flood-opacity="0.7" result="black"/>
+      <feComposite in="black" in2="SourceAlpha" operator="in" result="blackShape"/>
+      <feOffset in="SourceAlpha" dx="4" dy="4" result="shiftDown"/>
+      <feComposite in="blackShape" in2="shiftDown" operator="out" result="bottomEdge"/>
+      <feGaussianBlur in="bottomEdge" stdDeviation="3" result="bottomEdgeBlur"/>
+
+      <!-- 外部投影 -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="20" result="shadowBlur"/>
+      <feOffset in="shadowBlur" dx="0" dy="16" result="shadowOffset"/>
+      <feFlood flood-color="#000000" flood-opacity="0.8" result="shadowColor"/>
+      <feComposite in="shadowColor" in2="shadowOffset" operator="in" result="shadow"/>
+
+      <!-- 合成 -->
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="topEdgeBlur"/>
+        <feMergeNode in="bottomEdgeBlur"/>
+      </feMerge>
+    </filter>
+
+    <!-- 高光层渐变 -->
+    <linearGradient id="highlightGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="25%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+
+  <!-- A字母：金属渐变 + 斜面浮雕 -->
+  <path
+    fill-rule="evenodd"
+    fill="url(#metalGrad)"
+    filter="url(#bevel)"
+    d="M 512 180
+       L 824 840
+       L 684 840
+       L 616 580
+       L 408 580
+       L 340 840
+       L 200 840
+       Z
+       M 512 310
+       L 568 460
+       L 512 540
+       L 456 460
+       Z"
+  />
+
+  <!-- 高光叠加 -->
+  <path
+    fill-rule="evenodd"
+    fill="url(#highlightGrad)"
+    d="M 512 180
+       L 824 840
+       L 684 840
+       L 616 580
+       L 408 580
+       L 340 840
+       L 200 840
+       Z
+       M 512 310
+       L 568 460
+       L 512 540
+       L 456 460
+       Z"
+  />
+</svg>

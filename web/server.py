@@ -174,6 +174,18 @@ class AuctorHandler(SimpleHTTPRequestHandler):
             content = safe.read_text(encoding="utf-8", errors="replace")
             return self._json_response({"path": rel, "content": content})
 
+        # --- Project images ---
+        m = re.match(r"^/api/project/([^/]+)/images/(.+)$", path)
+        if m:
+            pid, fname = m.group(1), m.group(2)
+            safe = (WORKSPACE / pid / "images" / fname).resolve()
+            if not str(safe).startswith(str(WORKSPACE.resolve())):
+                return self._json_response({"error": "forbidden"}, 403)
+            if safe.is_file():
+                return self._serve_file(safe)
+            self.send_error(404)
+            return
+
         # --- Static files ---
         # Serve lib/ files
         if path.startswith("/lib/"):

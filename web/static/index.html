@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auctor</title>
+  <link rel="stylesheet" href="/lib/tufte.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Homepage: project list -->
+    <div id="home-view" class="view">
+      <header class="home-header">
+        <h1 class="home-title">Auctor</h1>
+        <p class="home-subtitle">Multi-Agent News Commentary Pipeline</p>
+      </header>
+      <div id="project-grid" class="project-grid"></div>
+    </div>
+
+    <!-- Project view -->
+    <div id="project-view" class="view hidden">
+      <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <a href="#" class="back-link" id="back-home">&larr; Projects</a>
+          <h2 id="sidebar-title" class="sidebar-project-title"></h2>
+        </div>
+        <ul id="sidebar-nav" class="sidebar-nav"></ul>
+      </nav>
+      <main id="content" class="content">
+        <div id="content-inner"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/lib/marked.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

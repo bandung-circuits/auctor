@@ -320,6 +320,33 @@ function ArtifactText({ title, text, hint, onSave, onConfirm, confirmLabel, busy
   )
 }
 
+function BriefPane({ data, onConfirm }) {
+  const [title, setTitle] = React.useState('')
+  const [touched, setTouched] = React.useState(false)
+  const brief = (data.texts && data.texts.brief) || ''
+  const parse = (txt) => {
+    const t = String(txt || '')
+    const tm = t.match(/^Title:\s*(.+)$/mi)
+    const sm = t.match(/^Summary:\s*(.+)$/mi)
+    return { bTitle: tm ? tm[1].trim() : '', summary: sm ? sm[1].trim() : '' }
+  }
+  const { bTitle, summary } = parse(brief)
+  const current = (data.record && data.record.title) || ''
+  React.useEffect(() => { if (!touched) setTitle(bTitle || current) }, [bTitle, current, touched])
+  if (!brief) {
+    return h('div', { className: 'au-pane' },
+      h('h3', { className: 'au-pane-title' }, t('stageConfirm')),
+      h('p', { className: 'au-pane-hint' }, t('briefWorking')))
+  }
+  return h('div', { className: 'au-pane' },
+    h('h3', { className: 'au-pane-title' }, t('stageConfirm')),
+    summary ? h('p', { style: { fontSize: 14, lineHeight: 1.6, marginBottom: 14 } }, summary) : null,
+    h('label', { className: 'au-field' }, t('projectTitle'),
+      h('input', { className: 'au-input', value: title, onChange: (e) => { setTouched(true); setTitle(e.target.value) } })),
+    h('div', { className: 'au-expert-actions' },
+      h('button', { className: 'au-btn primary', onClick: () => onConfirm(title || current) }, t('confirmStart'))))
+}
+
 function ExpertGatePane({ stage, insights, onSubmit, onSkip, onFetch, base }) {
   const [experts, setExperts] = React.useState([{ name: '', role: '', transcript: '' }])
   const [busy, setBusy] = React.useState(false)
@@ -592,6 +619,17 @@ function DetailPane({ ctx, id }) {
 
   const body = (() => {
     switch (step) {
+      case 'confirm': return h(BriefPane, {
+        data,
+        onConfirm: async (t) => {
+          const name = String(t || '').trim() || (data.record && data.record.title)
+          setBusy(true); setErr('')
+          try {
+            await rpc(ctx, 'project.rename', { id, title: name })
+            await drive(group0ConfirmMsg(name))
+          } catch (e) { setErr(String((e && e.message) || e)) } finally { setBusy(false) }
+        },
+      })
       case 'research': return h(ResearchPane, { data, onFetch: fetchFile, onError: setErr, base: '01.research/' })
       case 'expert': return h(ExpertGatePane, {
         stage: mSt('expert'), insights: data.indexes.expert,
@@ -650,101 +688,31 @@ function ArticlePane({ data, onFetch, onError, onAccept, mSt }) {
 
 // ---------- 新建 ----------
 
-const PLAN_ZH = ['确认选题与项目信息', '十角度并行背景研究', '综合出初始事件摘要', '等待你提供专家访谈素材', '深度研究（研究问题 + 分组深研）', '评论要点评审', '文章提纲评审', '成稿评审与定稿']
-const PLAN_EN = ['Confirm the brief & project info', '10-angle parallel background research', 'Synthesize the initial event summary', 'Wait for your expert interview material', 'Deep research (questions + group research)', 'Commentary points review', 'Article outline review', 'Final draft review']
+function group0ConfirmMsg(name) {
+  return langStore.val === 'en'
+    ? 'The brief is confirmed (project name: ' + name + '). Now execute Group 00: run the 10-angle parallel research and synthesize the initial summary, advancing automatically until the expert-material gate, then stop.'
+    : '选题已确认（项目名：' + name + '）。现在执行 Group 00：十角度并行研究并综合出初始摘要，自动推进到专家素材门停下。'
+}
 
 function NewProjectPane({ ctx, onCreate }) {
   const [lead, setLead] = React.useState('')
   const [notes, setNotes] = React.useState('')
-  const [title, setTitle] = React.useState('')
-  const [id, setId] = React.useState(null)
-  const [stage, setStage] = React.useState('form') // form | working | confirm
-  const [brief, setBrief] = React.useState('')
-  const [userTouchedTitle, setUserTouchedTitle] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState('')
-  const derivedRef = React.useRef('')
-  const parseBrief = (txt) => {
-    const t = String(txt || '')
-    const tm = t.match(/^Title:\s*(.+)$/mi)
-    const sm = t.match(/^Summary:\s*(.+)$/mi)
-    return { bTitle: tm ? tm[1].trim() : '', summary: sm ? sm[1].trim() : '' }
-  }
   const briefMsg = () => (langStore.val === 'en'
     ? 'Phase 0 (Brief): read input/news-lead.md (and input/editor-notes.md if present). In one short pass, restate the event in a line and suggest a concise project name. Write input/brief.md with "Title: <name>" and "Summary: <one-line restatement>". Then STOP — do not start any research, do not go online.'
     : '第一阶段（Brief）：读取 input/news-lead.md（如有 editor-notes.md 一并读）。用一步简短处理，用一句话复述这个事件，并建议一个简练的项目名。写入 input/brief.md，格式 "Title: <项目名>" 与 "Summary: <一句话事件复述>"。然后停下，不要开始任何调研、不要联网。')
-  const confirmMsg = () => {
-    const name = title.trim() || lead.trim().split(/\n/)[0].trim()
-    return langStore.val === 'en'
-      ? 'The brief is confirmed (project name: ' + name + '). Now execute Group 00: run the 10-angle parallel research and synthesize the initial summary, advancing automatically until the expert-material gate, then stop.'
-      : '选题已确认（项目名：' + name + '）。现在执行 Group 00：十角度并行研究并综合出初始摘要，自动推进到专家素材门停下。'
-  }
-  const toConfirm = async () => {
+  const submit = async () => {
     if (!lead.trim()) return
-    setErr(''); setBusy(true); setStage('working')
-    try {
-      const r = await rpc(ctx, 'project.create', { newsLead: lead.trim(), editorNotes: notes.trim() })
-      setId(r.id)
-      const t0 = lead.trim().split(/\n/)[0].trim()
-      derivedRef.current = t0.length > 60 ? t0.slice(0, 60) + '…' : t0
-      setTitle(derivedRef.current)
-      await rpc(ctx, 'project.rename', { id: r.id, title: derivedRef.current })
-      drivePrompt(ctx, r.id, briefMsg()).catch((e) => { if (!err) setErr(t('createFailed') + '（Brief 未生成，仍可确认启动）：' + String((e && e.message) || e)) })
-    } catch (e) { setErr(String((e && e.message) || e)) } finally { setBusy(false); setStage('confirm') }
-  }
-  React.useEffect(() => {
-    if (stage !== 'confirm' || !id) return
-    let alive = true
-    const poll = async () => {
-      try {
-        const g = await rpc(ctx, 'project.get', { id })
-        if (alive && g && g.texts && g.texts.brief) {
-          setBrief(g.texts.brief)
-          const { bTitle } = parseBrief(g.texts.brief)
-          if (bTitle && !userTouchedTitle && title === derivedRef.current) setTitle(bTitle)
-        }
-      } catch { /* 忽略轮询错误 */ }
-    }
-    poll()
-    const iv = setInterval(poll, 2000)
-    return () => { alive = false; clearInterval(iv) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, id, userTouchedTitle])
-  const back = async () => {
-    if (id) { try { await rpc(ctx, 'project.delete', { id }) } catch { /* ignore */ } setId(null) }
-    setStage('form')
-  }
-  const start = async () => {
-    if (!id) { setErr('项目未创建'); return }
     setBusy(true); setErr('')
     try {
-      await rpc(ctx, 'project.rename', { id, title: title.trim() || derivedRef.current })
-      await drivePrompt(ctx, id, confirmMsg())
-      if (onCreate) await onCreate(id)
-    } catch (e) { setErr(t('createFailed') + '：' + String((e && e.message) || e)) } finally { setBusy(false) }
-  }
-  const { summary } = parseBrief(brief)
-  if (stage === 'confirm') {
-    const plan = langStore.val === 'en' ? PLAN_EN : PLAN_ZH
-    return h('div', { className: 'au-pane' },
-      h('h3', { className: 'au-pane-title' }, t('initTitle')),
-      summary ? h('div', { className: 'au-plan', style: { marginBottom: 8 } },
-        h('div', { className: 'au-plan-title' }, t('eventSummaryLabel')),
-        h('p', { style: { margin: 0, fontSize: 14, lineHeight: 1.6 } }, summary))
-        : h('p', { className: 'au-pane-hint' }, t('briefWorking')),
-      h('label', { className: 'au-field' }, t('projectTitle'),
-        h('input', { className: 'au-input', value: title, onChange: (e) => { setUserTouchedTitle(true); setTitle(e.target.value) } })),
-      h('label', { className: 'au-field' }, t('newsLeadLabel'),
-        h('textarea', { className: 'au-input', value: lead, onChange: (e) => setLead(e.target.value) })),
-      h('label', { className: 'au-field' }, t('editorNotesLabel'),
-        h('textarea', { className: 'au-input', value: notes, onChange: (e) => setNotes(e.target.value) })),
-      h('div', { className: 'au-plan' },
-        h('div', { className: 'au-plan-title' }, t('planTitle')),
-        plan.map((p) => h('div', { key: p, className: 'au-plan-step' }, '· ' + p))),
-      h('div', { className: 'au-expert-actions' },
-        h('button', { className: 'au-btn ghost', onClick: back, disabled: busy }, t('backStep')),
-        h('button', { className: 'au-btn primary', onClick: start, disabled: busy }, busy ? t('creating') : t('confirmStart'))),
-      err ? h('p', { className: 'au-error' }, err) : null)
+      const r = await rpc(ctx, 'project.create', { newsLead: lead.trim(), editorNotes: notes.trim() })
+      const t0 = lead.trim().split(/\n/)[0].trim()
+      const derived = t0.length > 60 ? t0.slice(0, 60) + '…' : t0
+      await rpc(ctx, 'project.rename', { id: r.id, title: derived })
+      drivePrompt(ctx, r.id, briefMsg()).catch((e) => { setErr(t('createFailed') + '（Brief 未生成，仍可在项目内重试）：' + String((e && e.message) || e)) })
+      if (onCreate) await onCreate(r.id)
+    } catch (e) { setErr(String((e && e.message) || e)) } finally { setBusy(false) }
   }
   return h('div', { className: 'au-pane' },
     h('h3', { className: 'au-pane-title' }, t('newProject')),
@@ -753,7 +721,7 @@ function NewProjectPane({ ctx, onCreate }) {
     h('label', { className: 'au-field' }, t('editorNotesLabel'),
       h('textarea', { className: 'au-input', placeholder: t('editorNotesHint'), value: notes, onChange: (e) => setNotes(e.target.value) })),
     h('div', { className: 'au-expert-actions' },
-      h('button', { className: 'au-btn primary', disabled: busy || !lead.trim(), onClick: toConfirm }, t('nextStep'))),
+      h('button', { className: 'au-btn primary', disabled: busy || !lead.trim(), onClick: submit }, busy ? t('creating') : t('create'))),
     err ? h('p', { className: 'au-error' }, err) : null)
 }
 

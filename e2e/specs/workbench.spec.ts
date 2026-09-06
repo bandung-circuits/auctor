@@ -75,7 +75,7 @@ test('快速研究：角度卡片 → 点击弹 modal 展示完整摘录，可�
 })
 
 
-test('新建：表单 → 确认初始阶段（标题/计划/注记）→ 生成项目', async ({ page }) => {
+test('新建：表单提交 → 落到项目详情·确认选题(Brief)步（运行态可见）', async ({ page }) => {
   test.setTimeout(120_000)
   const leadText = '缅甸军政府就大选日期发表声明'
   await page.goto('/')
@@ -90,15 +90,13 @@ test('新建：表单 → 确认初始阶段（标题/计划/注记）→ 生成
     el.dispatchEvent(new Event('input', { bubbles: true }))
   }, leadText)
   await expect(page.locator('.au-field').nth(0).locator('textarea')).toHaveValue(leadText)
-  const nextBtn = page.locator('button:has-text("下一步：确认选题")')
-  await expect(nextBtn).toBeEnabled({ timeout: 10_000 })
-  await click(page, 'button:has-text("下一步：确认选题")')
-  // 初始确认页：计划汇报 + 标题自动带出
-  await expect(page.locator('.au-plan')).toBeVisible({ timeout: 10_000 })
-  await expect(page.locator('.au-plan')).toContainText('接下来的流程')
-  const titleVal = await page.locator('.au-field input').first().inputValue()
-  expect(titleVal).toBe(leadText)
-  // 确认并启动 → 项目出现在列表
-  await click(page, 'button:has-text("确认并启动")')
+  const createBtn = page.locator('button:has-text("创建并开始")')
+  await expect(createBtn).toBeEnabled({ timeout: 10_000 })
+  await click(page, 'button:has-text("创建并开始")')
+  // 落到项目详情·确认选题步：左侧出现新项目，阶段条激活格=确认选题
   await expect(page.locator('.au-nav-item', { hasText: leadText }).first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.au-stages')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.au-stage.on')).toContainText('确认选题', { timeout: 15_000 })
+  // Brief 未产出（无模型）→ 页内显示工作态
+  await expect(page.locator('.au-pane-hint').first()).toContainText('正在', { timeout: 15_000 })
 })

@@ -719,8 +719,8 @@ function NewProjectPane({ ctx, onCreate }) {
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState('')
   const briefMsg = () => (langStore.val === 'en'
-    ? 'Phase 0 (Brief): read input/news-lead.md (and input/editor-notes.md if present). In one short pass, restate the event in a line and suggest a concise project name. Write input/brief.md with "Title: <name>" and "Summary: <one-line restatement>". Then STOP — do not start any research, do not go online.'
-    : '第一阶段（Brief）：读取 input/news-lead.md（如有 editor-notes.md 一并读）。用一步简短处理，用一句话复述这个事件，并建议一个简练的项目名。写入 input/brief.md，格式 "Title: <项目名>" 与 "Summary: <一句话事件复述>"。然后停下，不要开始任何调研、不要联网。')
+    ? 'Phase 0 (Brief): read agents/00.brief.md and execute it strictly per that Blueprint. Inputs are input/news-lead.md and input/editor-notes.md. Write input/brief.md, then stop.'
+    : '第一阶段（Brief）：严格按 agents/00.brief.md 蓝图执行。输入见 input/news-lead.md 与 input/editor-notes.md。写入 input/brief.md 后停下。')
   const submit = async () => {
     if (!lead.trim()) return
     setBusy(true); setErr('')

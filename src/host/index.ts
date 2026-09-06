@@ -171,15 +171,16 @@ function sourcesCount(root: string): number {
 // ---------- run.json 骨架 ----------
 
 const SEED_STAGES = [
-  { index: 0, id: 'research-init', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
-  { index: 1, id: 'research', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
-  { index: 2, id: 'summary', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
-  { index: 3, id: 'expert', milestone: 'expert', status: 'waiting', started_at: null, finished_at: null },
-  { index: 4, id: 'questions', milestone: 'deep', status: 'waiting', started_at: null, finished_at: null },
-  { index: 5, id: 'deep-research', milestone: 'deep', status: 'waiting', started_at: null, finished_at: null },
-  { index: 6, id: 'points', milestone: 'points', status: 'waiting', started_at: null, finished_at: null },
-  { index: 7, id: 'outline', milestone: 'outline', status: 'waiting', started_at: null, finished_at: null },
-  { index: 8, id: 'article', milestone: 'article', status: 'waiting', started_at: null, finished_at: null },
+  { index: 0, id: 'brief', milestone: 'confirm', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'research-init', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'research', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'summary', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'expert', milestone: 'expert', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'questions', milestone: 'deep', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'deep-research', milestone: 'deep', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'points', milestone: 'points', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'outline', milestone: 'outline', status: 'waiting', started_at: null, finished_at: null },
+  { index: 9, id: 'article', milestone: 'article', status: 'waiting', started_at: null, finished_at: null },
 ]
 
 function writeSeedRunJson(dir: string, unit: string) {
@@ -280,7 +281,7 @@ export function apply(ctx: any, config: any = {}) {
     const hasBrief = fileExists(join(dir, 'input/brief.md'))
     const head = `You are the Auctor project session for "${basename(dir)}". Agents blueprints under agents/, references (including the kritik framework under references/domain/kritik/), and pomasa.json are mounted here. Project state is read from run.json and the filesystem. Artifacts already on disk are ground truth: never regenerate or rewrite them unless the user explicitly asks. All reads and writes are confined to this project directory.`
     const branch = !hasSummary && !hasBrief
-      ? 'Phase 0 (Brief): research has not started. Read input/news-lead.md (and input/editor-notes.md if present). In one short pass, restate in a line what the event is and suggest a concise project name. Write them to input/brief.md in this exact shape: "Title: <suggested project name>\nSummary: <one-line restatement of the event>". Then STOP: do NOT start any research, do NOT call other agents, do NOT go online. Wait for the editor to confirm the brief before starting Group 00.'
+      ? 'Phase 0 (Brief): research has not started. Read agents/00.brief.md and execute it strictly according to that Blueprint. The inputs are input/news-lead.md (and input/editor-notes.md if present). Write input/brief.md, then STOP and wait for the editor\'s confirmation — do not start Group 00.'
       : !hasSummary && hasBrief
         ? 'The Brief (input/brief.md) is written and awaiting the editor\'s confirmation. Report the current state briefly and wait. Do NOT start Group 00 until the editor confirms.'
         : 'The initial summary is done. Check input/expert/: if transcript files exist, execute agents/10.orchestrator.md strictly and advance through expert processing, question generation and deep research straight to the commentary-points gate; if input/expert/skip.json exists, skip experts; if neither exists, report the current state and wait for instructions. Thereafter follow agents/10.orchestrator.md for the commentary points, outline and article gates.'

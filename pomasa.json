@@ -3,105 +3,208 @@
   "title": "Auctor — news commentary production pipeline",
   "version": "0.1.0",
   "schema_version": "pomasa-0.15",
-  "work": { "mode": "single" },
+  "work": {
+    "mode": "single"
+  },
   "stages": [
     {
       "index": 0,
+      "id": "brief",
+      "milestone": "confirm",
+      "agent": "00.brief",
+      "gate": "input",
+      "contracts": [
+        {
+          "artifact": "brief",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "input/brief.md"
+        }
+      ]
+    },
+    {
+      "index": 1,
       "id": "research-init",
       "milestone": "research",
       "agent": "00.orchestrator",
       "gate": false,
       "contracts": [
-        { "artifact": "run-manifest", "shape": "single-file", "format": "json", "path": "run.json" },
-        { "artifact": "run-log", "shape": "single-file", "format": "markdown", "path": "run-log.md" },
-        { "artifact": "material-index", "shape": "single-file", "format": "markdown", "path": "materials/index.md" }
+        {
+          "artifact": "run-manifest",
+          "shape": "single-file",
+          "format": "json",
+          "path": "run.json"
+        },
+        {
+          "artifact": "run-log",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "run-log.md"
+        },
+        {
+          "artifact": "material-index",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "materials/index.md"
+        }
       ]
     },
     {
-      "index": 1,
+      "index": 2,
       "id": "research",
       "milestone": "research",
       "agent": "01.researcher",
       "gate": false,
       "parallel": "x10",
       "contracts": [
-        { "artifact": "sources", "shape": "vertical-list", "format": "markdown", "pathGlob": "materials/SRC-*.md", "indexPath": "materials/index.md" },
-        { "artifact": "research-excerpts", "shape": "vertical-list", "format": "markdown", "pathGlob": "01.research/{angle}/excerpts.md", "indexPath": "01.research/index.json" }
+        {
+          "artifact": "sources",
+          "shape": "vertical-list",
+          "format": "markdown",
+          "pathGlob": "materials/SRC-*.md",
+          "indexPath": "materials/index.md"
+        },
+        {
+          "artifact": "research-excerpts",
+          "shape": "vertical-list",
+          "format": "markdown",
+          "pathGlob": "01.research/{angle}/excerpts.md",
+          "indexPath": "01.research/index.json"
+        }
       ]
     },
     {
-      "index": 2,
+      "index": 3,
       "id": "summary",
       "milestone": "research",
       "agent": "02.summarizer",
       "gate": false,
       "contracts": [
-        { "artifact": "initial-summary", "shape": "single-file", "format": "markdown", "path": "02.summary/initial-summary.md", "indexPath": "02.summary/index.json" }
+        {
+          "artifact": "initial-summary",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "02.summary/initial-summary.md",
+          "indexPath": "02.summary/index.json"
+        }
       ]
     },
     {
-      "index": 3,
+      "index": 4,
       "id": "expert",
       "milestone": "expert",
       "agent": "11.expert-processor",
       "gate": "input",
       "contracts": [
-        { "artifact": "expert-insights", "shape": "vertical-list", "format": "markdown", "pathGlob": "03.expert-insights/{expert}.md", "indexPath": "03.expert-insights/index.json" }
+        {
+          "artifact": "expert-insights",
+          "shape": "vertical-list",
+          "format": "markdown",
+          "pathGlob": "03.expert-insights/{expert}.md",
+          "indexPath": "03.expert-insights/index.json"
+        }
       ]
     },
     {
-      "index": 4,
+      "index": 5,
       "id": "questions",
       "milestone": "deep",
       "agent": "12.question-generator",
       "gate": false,
       "contracts": [
-        { "artifact": "research-questions", "shape": "single-file", "format": "markdown", "path": "04.research-questions/research-questions.md", "indexPath": "04.research-questions/index.json" }
+        {
+          "artifact": "research-questions",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "04.research-questions/research-questions.md",
+          "indexPath": "04.research-questions/index.json"
+        }
       ]
     },
     {
-      "index": 5,
+      "index": 6,
       "id": "deep-research",
       "milestone": "deep",
       "agent": "13.deep-researcher",
       "gate": false,
       "parallel": "xN",
       "contracts": [
-        { "artifact": "deep-sources", "shape": "vertical-list", "format": "markdown", "pathGlob": "materials/SRC-Q{1..N}-*.md", "indexPath": "materials/index.md" },
-        { "artifact": "deep-excerpts", "shape": "vertical-list", "format": "markdown", "pathGlob": "05.deep-research/{Q1..N}/excerpts.md", "indexPath": "05.deep-research/index.json" }
+        {
+          "artifact": "deep-sources",
+          "shape": "vertical-list",
+          "format": "markdown",
+          "pathGlob": "materials/SRC-Q{1..N}-*.md",
+          "indexPath": "materials/index.md"
+        },
+        {
+          "artifact": "deep-excerpts",
+          "shape": "vertical-list",
+          "format": "markdown",
+          "pathGlob": "05.deep-research/{Q1..N}/excerpts.md",
+          "indexPath": "05.deep-research/index.json"
+        }
       ]
     },
     {
-      "index": 6,
+      "index": 7,
       "id": "points",
       "milestone": "points",
       "agent": "14.commentary-designer",
       "gate": "approval",
       "contracts": [
-        { "artifact": "commentary-points", "shape": "single-file", "format": "markdown", "path": "06.commentary-points/commentary-points.md", "indexPath": "06.commentary-points/index.json" }
+        {
+          "artifact": "commentary-points",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "06.commentary-points/commentary-points.md",
+          "indexPath": "06.commentary-points/index.json"
+        }
       ]
     },
     {
-      "index": 7,
+      "index": 8,
       "id": "outline",
       "milestone": "outline",
       "agent": "15.outliner",
       "gate": "approval",
       "contracts": [
-        { "artifact": "outline", "shape": "single-file", "format": "markdown", "path": "07.outline/outline.md", "indexPath": "07.outline/index.json" }
+        {
+          "artifact": "outline",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "07.outline/outline.md",
+          "indexPath": "07.outline/index.json"
+        }
       ]
     },
     {
-      "index": 8,
+      "index": 9,
       "id": "article",
       "milestone": "article",
       "agent": "16.writer",
       "gate": "review",
       "contracts": [
-        { "artifact": "article", "shape": "single-file", "format": "markdown", "path": "08.article/article.md", "indexPath": "08.article/index.json" },
-        { "artifact": "article-metadata", "shape": "single-file", "format": "markdown", "path": "08.article/article-metadata.md" }
+        {
+          "artifact": "article",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "08.article/article.md",
+          "indexPath": "08.article/index.json"
+        },
+        {
+          "artifact": "article-metadata",
+          "shape": "single-file",
+          "format": "markdown",
+          "path": "08.article/article-metadata.md"
+        }
       ]
     }
   ],
-  "gates": ["expert", "points", "outline", "article"]
+  "gates": [
+    "brief",
+    "expert",
+    "points",
+    "outline",
+    "article"
+  ]
 }

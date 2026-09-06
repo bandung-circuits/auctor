@@ -28,6 +28,7 @@ for need in \
   package/references/domain/kritik/KR-07-source-grading.md \
   package/references/domain/style-guide.md \
   package/references/methodology/research-overview.md \
+  package/assets/meme.jpg \
   package/README.md; do
   if ! tar tzf "$PKG_FILE" | grep -qFx "$need"; then
     echo "FAIL: tarball missing $need" >&2

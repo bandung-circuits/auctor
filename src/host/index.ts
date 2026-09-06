@@ -482,6 +482,20 @@ export function apply(ctx: any, config: any = {}) {
         })
       },
     })
+    webServer.register({
+      kind: 'exact',
+      path: '/auctor/asset/meme.jpg',
+      handler: (_req: unknown, res: any) => {
+        try {
+          const buf = readFileSync(join(ROOT, 'assets', 'meme.jpg'))
+          res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=3600' })
+          res.end(buf)
+        } catch {
+          res.writeHead(404, { 'content-type': 'text/plain' })
+          res.end('not found')
+        }
+      },
+    })
   }
 
   // 工作区 MCP 种子 + 挂载（best-effort，不阻塞启动）。

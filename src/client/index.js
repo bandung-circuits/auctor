@@ -280,9 +280,11 @@ function MilestoneStrip({ milestones, active, onPick }) {
     }))
 }
 
-function EmptyState({ title, hint }) {
+function EmptyState({ title, hint, img }) {
   return h('div', { className: 'au-empty' },
-    h('div', { className: 'au-empty-fig' }, '✎'),
+    img
+      ? h('img', { className: 'au-empty-img', src: '/auctor/asset/meme.jpg', alt: '' })
+      : h('div', { className: 'au-empty-fig' }, '✎'),
     h('p', { className: 'au-empty-title' }, title),
     hint ? h('p', { className: 'au-empty-hint' }, hint) : null)
 }
@@ -656,8 +658,8 @@ function Workbench({ ctx }) {
   const main = (() => {
     if (view === 'new') return h(NewProjectPane, { ctx, onCreate: async (id) => { await refresh(); if (id) { setSelected(id); setView('detail') } } })
     if (view === 'detail' && selected) return h(DetailPane, { key: selected, ctx, id: selected })
-    if (!projects || !projects.length) return h('div', { className: 'au-hero' }, h(EmptyState, { title: t('newFirst'), hint: t('newFirstHint') }))
-    return h('div', { className: 'au-hero' }, h(EmptyState, { title: t('newFirst'), hint: t('newFirstHint') }))
+    if (!projects || !projects.length) return h('div', { className: 'au-hero' }, h(EmptyState, { title: t('newFirst'), hint: t('newFirstHint'), img: true }))
+    return h('div', { className: 'au-hero' }, h(EmptyState, { title: t('newFirst'), hint: t('newFirstHint'), img: true }))
   })()
 
   return h('div', { className: 'au-root au-workbench' },
@@ -800,6 +802,7 @@ const STYLE = `
 
 .au-empty { border: 1px dashed var(--dsw-alias-border-l2, #e8e8e8); border-radius: 16px; padding: 48px 24px; text-align: center; }
 .au-empty-fig { font-size: 44px; opacity: 0.35; margin-bottom: 12px; }
+.au-empty-img { width: 190px; max-width: 70%; border-radius: 12px; margin-bottom: 14px; }
 .au-hero { min-height: 62vh; display: flex; align-items: center; justify-content: center; }
 .au-empty-title { font-weight: 650; font-size: 18px; }
 .au-empty-hint { color: var(--dsw-alias-label-secondary, #666); font-size: 14px; max-width: 480px; margin: 8px auto 0; }

@@ -85,4 +85,12 @@ if ! grep -q '"ok":true' <<<"${RESP3}" || ! grep -q 'dataRoot' <<<"${RESP3}"; th
   exit 1
 fi
 
+RESP4="$(curl -s -o "${TMP}/meme.jpg" -w '%{http_code}' "${BASE}/auctor/asset/meme.jpg" --max-time 10)"
+MZ="$(stat -f%z "${TMP}/meme.jpg" 2>/dev/null || echo 0)"
+echo "-- meme route => HTTP ${RESP4} (${MZ} bytes)"
+if [ "${RESP4}" != "200" ] || [ "${MZ}" -lt 10000 ]; then
+  echo "FAIL: /auctor/asset/meme.jpg 应 200 且 >10KB"
+  exit 1
+fi
+
 echo "PASS transport smoke: /auctor channel registered and serving on real HTTP (${BASE})"

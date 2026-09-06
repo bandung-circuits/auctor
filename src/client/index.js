@@ -34,9 +34,7 @@ const I18N = {
     downloadMd: '下载 Markdown', viewAll: '查看全部', materialTitle: '材料库', materialHint: 'materials/ 收录本项目的全部原文来源。',
     discussion: '讨论', discussHint: '给项目会话一句话：补充背景、要求调研究问题、换个方向重做要点/提纲/文章。你的决策会在同一会话继续。',
     discussPlaceholder: 'e.g. 把要点 3 换成侧重债务条款的博弈…', send: '发送',
-    langLabel: '语言', settings: '设置', dataRoot: '数据目录', mcpNote: '联网检索工具', mcpHint: '编辑 ~/.auctor/.dsh/mcp.servers.yml 配置爬虫与检索凭证，重启后生效。',
-    modelNote: '推理使用 dsh 当前默认模型，改动请到 dsh 设置。',
-    rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
+    langLabel: '语言', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
     namePlaceholder: '项目标题', loading: '加载中…', error: '出错',
     gates: '四道门', markers: '阶段条可点击回看；修改已完成的上游产物后，下游需要你在讨论面板发起重做。',
   },
@@ -62,9 +60,7 @@ const I18N = {
     downloadMd: 'Download Markdown', viewAll: 'Show all', materialTitle: 'Materials', materialHint: 'materials/ holds the full-text sources of this project.',
     discussion: 'Discussion', discussHint: 'A line to the project session: add context, adjust questions, redo points/outline/article in a new direction. Decisions continue the same session.',
     discussPlaceholder: 'e.g. Replace point 3 with the debt-clause bargaining angle…', send: 'Send',
-    langLabel: 'Language', settings: 'Settings', dataRoot: 'Data directory', mcpNote: 'Search & fetch tools', mcpHint: 'Edit ~/.auctor/.dsh/mcp.servers.yml for crawler/search credentials; restart takes effect.',
-    modelNote: 'Inference uses the current dsh default model; change it in dsh settings.',
-    rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
+    langLabel: 'Language', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
     namePlaceholder: 'Project title', loading: 'Loading…', error: 'Error',
     gates: 'Gates', markers: 'The stage strip is clickable; after editing upstream artifacts, trigger a redo chain from the discussion panel.',
   },
@@ -599,17 +595,6 @@ function ArticlePane({ data, onFetch, onError, onAccept, mSt }) {
         h('div', { className: 'au-fold-body' }, data.texts.articleMetadata ? h(MiniMarkdown, { text: data.texts.articleMetadata }) : null))))
 }
 
-function SettingsPane({ ctx }) {
-  const [cfg, setCfg] = React.useState(null)
-  React.useEffect(() => { rpc(ctx, 'config.get').then(setCfg).catch(() => {}) }, [ctx])
-  return h('div', { className: 'au-pane' },
-    h('h3', { className: 'au-pane-title' }, t('settings')),
-    h('p', { className: 'au-pane-hint' }, t('modelNote')),
-    h('p', { className: 'au-pane-hint' }, t('mcpNote'), ' · '),
-    cfg ? h('div', { className: 'au-settings' },
-      h('div', { className: 'au-settings-row' }, h('span', { className: 'au-settings-k' }, t('dataRoot')), h('code', null, cfg.dataRoot)),
-      h('div', { className: 'au-settings-row' }, h('span', { className: 'au-settings-k' }, t('mcpNote')), h('span', null, cfg.mcpSeeded ? '～/.auctor/.dsh/mcp.servers.yml' : t('mcpHint')))) : null)
-}
 
 // ---------- 新建 ----------
 
@@ -671,7 +656,6 @@ function Workbench({ ctx }) {
 
   const main = (() => {
     if (view === 'new') return h(NewProjectPane, { ctx, onCreate: async (id) => { await refresh(); if (id) { setSelected(id); setView('detail') } } })
-    if (view === 'settings') return h(SettingsPane, { ctx })
     if (view === 'detail' && selected) return h(DetailPane, { key: selected, ctx, id: selected })
     if (!projects || !projects.length) return h('div', { className: 'au-hero' }, h(EmptyState, { title: t('newFirst'), hint: t('newFirstHint') }))
     return h('div', { className: 'au-hero' }, h(EmptyState, { title: t('newFirst'), hint: t('newFirstHint') }))
@@ -680,7 +664,7 @@ function Workbench({ ctx }) {
   return h('div', { className: 'au-root au-workbench' },
     h('div', { className: 'au-nav' },
       h('div', { className: 'au-nav-head' },
-        h('div', { className: 'au-brand' }, '✒', t('appName')),
+        h('div', { className: 'au-brand' }, t('appName')),
         h('button', { className: 'au-btn primary', onClick: openNew }, '+ ', t('newProject'))),
       h('div', { className: 'au-nav-list' },
         err ? h('p', { className: 'au-error' }, err) : null,
@@ -688,7 +672,6 @@ function Workbench({ ctx }) {
           ? projects.map(navItem)
           : h('p', { className: 'au-dim au-nav-empty' }, t('emptyNav'))),
       h('div', { className: 'au-nav-foot' },
-        h('button', { className: 'au-btn ghost', onClick: () => setView('settings') }, '⚙ ', t('settings')),
         h(LangSwitch, null)),
     ),
     h('div', { className: 'au-main' },

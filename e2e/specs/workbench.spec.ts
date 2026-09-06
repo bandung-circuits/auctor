@@ -63,10 +63,42 @@ test('快速研究：角度卡片 → 点击弹 modal 展示完整摘录，可�
   await page.waitForSelector('.au-angle-card', { timeout: 20_000 })
   const cards = await page.$$('.au-angle-card')
   expect(cards.length).toBeGreaterThan(0)
+  // 摘要右侧悬浮目录
+  const tocItems = await page.$$('.au-toc-item')
+  expect(tocItems.length).toBeGreaterThan(1)
   await click(page, '.au-angle-card')
   await expect(page.locator('.au-modal')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.au-modal')).toContainText('Event Overview')
   await expect(page.locator('.au-modal')).toContainText('Fidel centennial')
   await click(page, '.au-modal-box .au-btn.ghost')
   await expect(page.locator('.au-modal')).toHaveCount(0, { timeout: 10_000 })
+})
+
+
+test('新建：表单 → 确认初始阶段（标题/计划/注记）→ 生成项目', async ({ page }) => {
+  test.setTimeout(120_000)
+  const leadText = '缅甸军政府就大选日期发表声明'
+  await page.goto('/')
+  await click(page, '[data-dock-app="dsh-auctor"]')
+  await page.waitForSelector('.au-workbench', { timeout: 30_000 })
+  await click(page, '.au-btn-new')
+  const leadBox = page.locator('.au-field').nth(0).locator('textarea')
+  await leadBox.waitFor({ timeout: 20_000 })
+  await leadBox.evaluate((el, text) => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set
+    setter.call(el, text)
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  }, leadText)
+  await expect(page.locator('.au-field').nth(0).locator('textarea')).toHaveValue(leadText)
+  const nextBtn = page.locator('button:has-text("下一步：确认选题")')
+  await expect(nextBtn).toBeEnabled({ timeout: 10_000 })
+  await click(page, 'button:has-text("下一步：确认选题")')
+  // 初始确认页：计划汇报 + 标题自动带出
+  await expect(page.locator('.au-plan')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.au-plan')).toContainText('接下来的流程')
+  const titleVal = await page.locator('.au-field input').first().inputValue()
+  expect(titleVal).toBe(leadText)
+  // 确认并启动 → 项目出现在列表
+  await click(page, 'button:has-text("确认并启动")')
+  await expect(page.locator('.au-nav-item', { hasText: leadText }).first()).toBeVisible({ timeout: 30_000 })
 })

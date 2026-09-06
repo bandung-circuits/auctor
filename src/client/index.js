@@ -34,7 +34,7 @@ const I18N = {
     downloadMd: '下载 Markdown', viewAll: '查看全部', materialTitle: '材料库', materialHint: 'materials/ 收录本项目的全部原文来源。',
     discussion: '讨论', discussHint: '给项目会话一句话：补充背景、要求调研究问题、换个方向重做要点/提纲/文章。你的决策会在同一会话继续。',
     discussPlaceholder: 'e.g. 把要点 3 换成侧重债务条款的博弈…', send: '发送',
-    rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
+    initTitle: '确认选题并生成项目', projectTitle: '项目名称', planTitle: '接下来的流程', nextStep: '下一步：确认选题', confirmStart: '确认并启动', backStep: '返回修改', tocTitle: '目录', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
     namePlaceholder: '项目标题', loading: '加载中…', error: '出错',
     gates: '四道门', markers: '阶段条可点击回看；修改已完成的上游产物后，下游需要你在讨论面板发起重做。',
   },
@@ -60,7 +60,7 @@ const I18N = {
     downloadMd: 'Download Markdown', viewAll: 'Show all', materialTitle: 'Materials', materialHint: 'materials/ holds the full-text sources of this project.',
     discussion: 'Discussion', discussHint: 'A line to the project session: add context, adjust questions, redo points/outline/article in a new direction. Decisions continue the same session.',
     discussPlaceholder: 'e.g. Replace point 3 with the debt-clause bargaining angle…', send: 'Send',
-    rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
+    initTitle: 'Confirm the brief & create', projectTitle: 'Project title', planTitle: 'What happens next', nextStep: 'Next: review', confirmStart: 'Confirm & start', backStep: 'Back', tocTitle: 'Contents', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
     namePlaceholder: 'Project title', loading: 'Loading…', error: 'Error',
     gates: 'Gates', markers: 'The stage strip is clickable; after editing upstream artifacts, trigger a redo chain from the discussion panel.',
   },
@@ -211,13 +211,14 @@ function inlineText(text) {
 function MiniMarkdown({ text }) {
   const lines = String(text || '').split('\n')
   const out = []
-  let listOpen = false
+  let hidx = 0
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     let el = null
     if (/^#{1,3}\s/.test(line)) {
+      hidx++
       const level = line.match(/^#+/)[0].length
-      el = h(level === 1 ? 'h4' : 'h5', { key: i, className: 'au-md-h' }, inlineText(line.replace(/^#+\s*/, '')))
+      el = h(level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5', { key: i, className: 'au-md-h lv' + level, 'data-h': 'h' + hidx }, inlineText(line.replace(/^#+\s*/, '')))
     } else if (/^\s*[-*]\s+/.test(line) || /^\s*(\d+)\.(\s)/.test(line)) {
       el = h('div', { key: i, className: 'au-md-li' }, '• ' + _.trimList(line))
     } else if (/^\s*>\s?/.test(line)) {
@@ -229,7 +230,6 @@ function MiniMarkdown({ text }) {
     } else {
       el = h('p', { key: i, className: 'au-md-p' }, inlineText(line))
     }
-    listOpen = /^\s*[-*]\s+/.test(line)
     out.push(el)
   }
   return h('div', { className: 'au-md' }, out)
@@ -414,9 +414,24 @@ function ResearchPane({ data, onFetch, onError, base }) {
   }, [data && data.indexes && data.indexes.research && data.indexes.research.length])
   const openAngle = (a) => setOpenId(a.id)
   const open = angles.find((a) => a.id === openId) || null
+  const heads = (() => {
+    const m = (data.texts.summary || '').match(/^#{1,3}\s.*$/gm) || []
+    return m.map((line, i) => ({ i: i + 1, text: line.replace(/^#+\s*/, ''), level: (line.match(/^#+/) || [''])[0].length }))
+  })()
   return h('div', { className: 'au-pane' },
     h('h3', { className: 'au-pane-title' }, t('summaryTitle')),
-    h('div', { className: 'au-reading' }, data.texts.summary ? h(MiniMarkdown, { text: data.texts.summary }) : h('p', { className: 'au-dim' }, t('runningMarker'))),
+    h('div', { className: 'au-summary-layout' },
+      h('div', { className: 'au-summary-main' },
+        data.texts.summary ? h(MiniMarkdown, { text: data.texts.summary }) : h('p', { className: 'au-dim' }, t('runningMarker'))),
+      heads.length > 1
+        ? h('div', { className: 'au-toc' },
+          h('div', { className: 'au-toc-title' }, t('tocTitle')),
+          heads.map((hh) => h('button', {
+            key: hh.i,
+            className: 'au-toc-item' + (hh.level > 2 ? ' sub' : ''),
+            onClick: () => { const el = document.querySelector('[data-h="h' + hh.i + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }) },
+          }, hh.text)))
+        : null),
     h('h3', { className: 'au-pane-title' }, t('anglesTitle')),
     h('p', { className: 'au-pane-hint' }, t('anglesHint')),
     angles.length === 0
@@ -634,21 +649,50 @@ function ArticlePane({ data, onFetch, onError, onAccept, mSt }) {
 
 // ---------- 新建 ----------
 
+const PLAN_ZH = ['十角度并行背景研究', '综合出初始事件摘要', '等待你提供专家访谈素材', '深度研究（研究问题 + 分组深研）', '评论要点评审', '文章提纲评审', '成稿评审与定稿']
+const PLAN_EN = ['10-angle parallel background research', 'Synthesize the initial event summary', 'Wait for your expert interview material', 'Deep research (questions + group research)', 'Commentary points review', 'Article outline review', 'Final draft review']
+
 function NewProjectPane({ ctx, onCreate }) {
   const [lead, setLead] = React.useState('')
   const [notes, setNotes] = React.useState('')
+  const [title, setTitle] = React.useState('')
+  const [stage, setStage] = React.useState('form') // form | confirm
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState('')
-  const submit = async () => {
+  const toConfirm = () => {
     if (!lead.trim()) return
+    const t0 = lead.trim().split(/\n/)[0].trim()
+    setTitle(t0.length > 60 ? t0.slice(0, 60) + '…' : t0)
+    setStage('confirm')
+  }
+  const start = async () => {
     setBusy(true); setErr('')
     try {
       const r = await rpc(ctx, 'project.create', { newsLead: lead.trim(), editorNotes: notes.trim() })
+      if (title.trim() && title.trim() !== r.title) await rpc(ctx, 'project.rename', { id: r.id, title: title.trim() })
       let sessionId
       try { sessionId = await driveProjectSession(ctx, r.prompt) } catch (e) { setErr(t('createFailed') + '：' + String((e && e.message) || e)) }
       if (sessionId) await rpc(ctx, 'project.attach', { id: r.id, sessionId })
       if (onCreate) await onCreate(r ? r.id : null)
     } catch (e) { setErr(String((e && e.message) || e)) } finally { setBusy(false) }
+  }
+  if (stage === 'confirm') {
+    const plan = langStore.val === 'en' ? PLAN_EN : PLAN_ZH
+    return h('div', { className: 'au-pane' },
+      h('h3', { className: 'au-pane-title' }, t('initTitle')),
+      h('label', { className: 'au-field' }, t('projectTitle'),
+        h('input', { className: 'au-input', value: title, onChange: (e) => setTitle(e.target.value) })),
+      h('label', { className: 'au-field' }, t('newsLeadLabel'),
+        h('textarea', { className: 'au-input', value: lead, onChange: (e) => setLead(e.target.value) })),
+      h('label', { className: 'au-field' }, t('editorNotesLabel'),
+        h('textarea', { className: 'au-input', value: notes, onChange: (e) => setNotes(e.target.value) })),
+      h('div', { className: 'au-plan' },
+        h('div', { className: 'au-plan-title' }, t('planTitle')),
+        plan.map((p) => h('div', { key: p, className: 'au-plan-step' }, '· ' + p))),
+      h('div', { className: 'au-expert-actions' },
+        h('button', { className: 'au-btn ghost', onClick: () => setStage('form'), disabled: busy }, t('backStep')),
+        h('button', { className: 'au-btn primary', onClick: start, disabled: busy }, busy ? t('creating') : t('confirmStart'))),
+      err ? h('p', { className: 'au-error' }, err) : null)
   }
   return h('div', { className: 'au-pane' },
     h('h3', { className: 'au-pane-title' }, t('newProject')),
@@ -657,7 +701,7 @@ function NewProjectPane({ ctx, onCreate }) {
     h('label', { className: 'au-field' }, t('editorNotesLabel'),
       h('textarea', { className: 'au-input', placeholder: t('editorNotesHint'), value: notes, onChange: (e) => setNotes(e.target.value) })),
     h('div', { className: 'au-expert-actions' },
-      h('button', { className: 'au-btn primary', disabled: busy || !lead.trim(), onClick: submit }, busy ? t('creating') : t('create'))),
+      h('button', { className: 'au-btn primary', disabled: busy || !lead.trim(), onClick: toConfirm }, t('nextStep'))),
     err ? h('p', { className: 'au-error' }, err) : null)
 }
 
@@ -800,7 +844,7 @@ function apply(ctx) {
 const STYLE = `
 .au-root * { box-sizing: border-box }
 .au-root { font-family: var(--dsw-alias-font-family, -apple-system, "PingFang SC", "Segoe UI", sans-serif); font-size: 16px; line-height: 1.6; color: var(--dsw-alias-label-primary, #1f2329); }
-.au-root button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+.au-root button { font: inherit; cursor: pointer; color: inherit; }
 .au-root textarea, .au-root input { font: inherit; }
 
 .au-shell-root { position: absolute; inset: 0; z-index: 20; display: flex; align-items: stretch; pointer-events: none; background: transparent; }
@@ -863,12 +907,26 @@ const STYLE = `
 .au-pane-title { font-size: 19px; font-weight: 650; margin: 20px 0 6px; }
 .au-pane-hint { color: var(--dsw-alias-label-secondary, #666); font-size: 13.5px; margin: 2px 0 12px; }
 .au-reading { margin-bottom: 16px; }
-.au-md-h { font-weight: 650; margin: 10px 0 4px; }
-.au-md-p { margin: 4px 0; }
-.au-md-li { margin: 2px 0 2px 8px; }
-.au-md-quote { border-left: 3px solid var(--dsw-alias-border-l3, #d0d0d0); padding-left: 10px; color: var(--dsw-alias-label-secondary, #555); margin: 6px 0; }
-.au-md-hr { border-top: 1px solid var(--dsw-alias-border-l2, #e8e8e8); margin: 10px 0; }
-.au-md-gap { height: 8px; }
+.au-md { font-size: 15px; line-height: 1.75; color: var(--dsw-alias-label-primary, #1f2329); }
+.au-md-h { font-weight: 650; margin: 18px 0 8px; letter-spacing: -0.005em; scroll-margin-top: 10px; }
+.au-md-h.lv1 { font-size: 19px; }
+.au-md-h.lv2 { font-size: 17px; }
+.au-md-h.lv3 { font-size: 15.5px; }
+.au-md-p { margin: 7px 0; }
+.au-md-li { margin: 3px 0 3px 6px; }
+.au-md-quote { border-left: 3px solid var(--dsw-alias-border-l3, #d0d0d0); padding-left: 12px; color: var(--dsw-alias-label-secondary, #555); margin: 8px 0; }
+.au-md-hr { border-top: 1px solid var(--dsw-alias-border-l2, #e8e8e8); margin: 14px 0; }
+.au-md-gap { height: 10px; }
+.au-summary-layout { display: flex; gap: 18px; }
+.au-summary-main { flex: 1; min-width: 0; }
+.au-toc { flex: none; width: 190px; position: sticky; top: 6px; align-self: flex-start; max-height: 72vh; overflow-y: auto; padding: 2px 0 2px 12px; border-left: 1px solid var(--dsw-alias-border-l1, #eee); }
+.au-toc-title { font-size: 12px; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dsw-alias-label-caption, #999); margin-bottom: 8px; }
+.au-toc-item { display: block; width: 100%; text-align: left; font-size: 12.5px; line-height: 1.45; padding: 4px 6px; border-radius: 6px; color: var(--dsw-alias-label-secondary, #666); }
+.au-toc-item:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.05)); color: var(--dsw-alias-label-primary, #1f2329); }
+.au-toc-item.sub { padding-left: 14px; }
+.au-plan { background: var(--dsw-alias-bg-layer-1, #fafafa); border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); border-radius: 12px; padding: 14px 18px; margin: 4px 0 16px; }
+.au-plan-title { font-size: 13.5px; font-weight: 650; margin-bottom: 8px; }
+.au-plan-step { font-size: 13.5px; color: var(--dsw-alias-label-secondary, #666); line-height: 1.7; }
 .au-dim { color: var(--dsw-alias-label-caption, #999); font-size: 13px; }
 
 .au-fold-list { margin-top: 8px; }

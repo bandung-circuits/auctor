@@ -800,12 +800,15 @@ const STYLE = `
 .au-btn.danger { color: var(--dsw-alias-state-error-primary, #dc2626); }
 .au-btn:disabled { opacity: 0.5; cursor: default; }
 
-.au-empty { border: 1px dashed var(--dsw-alias-border-l2, #e8e8e8); border-radius: 16px; padding: 48px 24px; text-align: center; }
-.au-empty-fig { font-size: 44px; opacity: 0.35; margin-bottom: 12px; }
-.au-empty-img { width: 200px; height: 200px; object-fit: cover; display: block; margin: 0 auto 14px; -webkit-mask-image: radial-gradient(ellipse closest-side, #000 52%, transparent 76%); mask-image: radial-gradient(ellipse closest-side, #000 52%, transparent 76%); }
+.au-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 44px 24px; text-align: center; gap: 10px; color: var(--dsw-alias-label-dimmed, #777); border: 1px dashed var(--dsw-alias-border-l2, #e8e8e8); border-radius: 14px; background: var(--dsw-alias-bg-layer-1, #fafafa); }
+.au-empty-hero { border: none; background: transparent; padding: 56px 28px; gap: 12px; }
+.au-empty-fig { font-size: 44px; line-height: 1; opacity: 0.5; margin: 0; }
+.au-empty-img { width: 200px; height: 200px; object-fit: cover; display: block; margin: 0; -webkit-mask-image: radial-gradient(ellipse closest-side, #000 52%, transparent 76%); mask-image: radial-gradient(ellipse closest-side, #000 52%, transparent 76%); }
 .au-hero { min-height: 62vh; display: flex; align-items: center; justify-content: center; }
-.au-empty-title { font-weight: 650; font-size: 18px; }
-.au-empty-hint { color: var(--dsw-alias-label-secondary, #666); font-size: 14px; max-width: 480px; margin: 8px auto 0; }
+.au-empty-title { font-size: 16px; font-weight: 600; color: var(--dsw-alias-label-primary, #1f2329); margin: 0; }
+.au-empty-hint { font-size: 14px; color: var(--dsw-alias-label-dimmed, #777); margin: 0; }
+.au-empty-hero .au-empty-title { font-size: 20px; font-weight: 650; letter-spacing: -0.01em; }
+.au-empty-hero .au-empty-hint { font-size: 14.5px; line-height: 1.65; max-width: 440px; }
 
 .au-stages { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--dsw-alias-border-l2, #e8e8e8); overflow-x: auto; }
 .au-stage { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2, #f5f5f5); color: var(--dsw-alias-label-secondary, #555); font-size: 13.5px; white-space: nowrap; }

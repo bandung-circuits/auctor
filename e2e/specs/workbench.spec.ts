@@ -1,0 +1,53 @@
+// L4a 确定性 e2e：真实 dsh web + fixture 项目（停在评论要点门）。
+// 只断言界面展示与编辑保存，不触发真实会话驱动（保持确定性，无模型依赖）。
+// dsh web 的空态引导层（_mask/_root）会压住点击命中测试：所有交互统一用
+// 程序化 click（$eval），绕开几何拦截；断言仍走常规 locator。
+import { test, expect } from '@playwright/test'
+
+const click = (page, selector) => page.$eval(selector, (el) => el.click())
+
+test('工作台：fixture 项目按要点门状态呈现，可编辑并保存要点', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.goto('/')
+
+  // 1) footer 按钮出现并打开工作台
+  await page.waitForSelector('.au-footer-action', { timeout: 60_000 })
+  await click(page, '.au-footer-action')
+  await page.waitForSelector('.au-workbench', { timeout: 30_000 })
+
+  // 2) 左栏出现 fixture 项目
+  await page.waitForSelector('.au-nav-item', { timeout: 30_000 })
+  const titles = await page.$$eval('.au-nav-item-title', (els) => els.map((e) => e.textContent))
+  expect(titles.some((t) => t && t.includes('Fidel centennial'))).toBe(true)
+
+  // 3) 打开项目，六段阶段条呈现，评论要点为“待你决定”
+  await click(page, '.au-nav-item')
+  await page.waitForSelector('.au-stages', { timeout: 30_000 })
+  const stageCount = await page.$$('.au-stage')
+  expect(stageCount.length).toBe(6)
+  const stageTexts = await page.$$eval('.au-stage', (els) => els.map((e) => e.textContent))
+  const pointsSeg = stageTexts.findIndex((s) => s && s.includes('评论要点'))
+  expect(pointsSeg).toBeGreaterThan(-1)
+  expect(stageTexts[pointsSeg]).toContain('待你决定')
+
+  // 4) 默认落在当前阶段（评论要点门），要点正文渲染
+  await page.waitForSelector('.au-artifact-title', { timeout: 30_000 })
+  const title = await page.textContent('.au-artifact-title')
+  expect(title.trim()).toBe('评论要点')
+  await expect(page.locator('.au-md')).toContainText('Centennial as anticolonial symbol')
+
+  // 5) 编辑并保存，写回成功提示出现
+  await click(page, 'button:has-text("编辑")')
+  await page.waitForSelector('.au-artifact-textarea', { timeout: 10_000 })
+  await page.fill('.au-artifact-textarea', '# Commentary Points (edited)\n\nEdited content.')
+  await click(page, 'button:has-text("保存编辑")')
+  await expect(page.locator('.au-flash')).toContainText('已保存', { timeout: 10_000 })
+
+  // 6) 深度研究分组可折叠查看（downstream structure sanity）
+  await click(page, '.au-stage:has-text("深度研究")')
+  await page.waitForSelector('.au-tabs', { timeout: 10_000 })
+  const tabs = await page.$$eval('.au-tab', (els) => els.map((e) => e.textContent))
+  expect(tabs.some((t) => t && (t.includes('Q1') || t.includes('Diplomacy')))).toBe(true)
+  await click(page, '.au-tab')
+  await expect(page.locator('.au-tab-body')).toContainText('Regional statements', { timeout: 10_000 })
+})

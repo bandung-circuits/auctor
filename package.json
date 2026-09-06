@@ -1,0 +1,82 @@
+{
+  "name": "dsh-auctor",
+  "version": "0.1.0",
+  "description": "Auctor：新闻评论生产工作台。从一条新闻线索到可发表的深度评论，每项目一个连贯 dsh 会话，GUI 为 shell.overlay 工作台（左栏项目、右栏六段流水线：快速研究→专家素材→深度研究→评论要点→提纲→成稿），行为全部交给 DSH 智能运行时。",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:bandung-circuits/auctor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bandung-circuits/auctor/issues"
+  },
+  "main": "./lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "agents",
+    "references",
+    "pomasa.json",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "verify": "node scripts/build.mjs && node verify.mjs",
+    "verify:integration": "bash scripts/transport-smoke.sh",
+    "test:pack": "bash scripts/package-integrity.sh",
+    "test:install": "bash scripts/install-smoke.sh",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "test:e2e": "npm run build && playwright test --config e2e/playwright.config.ts --project chromium",
+    "verify:live": "playwright test --config e2e/playwright.config.ts --project live",
+    "prepare": "node scripts/build.mjs"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-conversation": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-theme": "^0.1.0-rc.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "esbuild": "^0.28.2"
+  }
+}

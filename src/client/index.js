@@ -848,8 +848,12 @@ const STYLE = `
 .au-expert-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .au-expert-row input.exp-name { flex: 1; }
 .au-expert-row input.exp-role { flex: 1; }
-.au-input { width: 100%; border: 1px solid var(--dsw-alias-border-l2, #e8e8e8); border-radius: 12px; padding: 9px 12px; background: var(--dsw-alias-bg-base, #fff); color: var(--dsw-alias-label-primary, #1f2329); }
-.au-input:focus { outline: none; border-color: var(--dsw-alias-accent, #4f7cff); }
+.au-input { width: 100%; border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); background: var(--dsw-alias-bg-layer-2, #f5f5f5); border-radius: 8px; padding: 8px 12px; font-size: 14px; color: var(--dsw-alias-label-primary, #1f2329); outline: none; transition: border-color 140ms ease, box-shadow 140ms ease; }
+.au-input::placeholder { color: var(--dsw-alias-label-caption, #999); }
+.au-input:hover { border-color: var(--dsw-alias-border-l3, #d0d0d0); }
+.au-input:focus { border-color: var(--dsw-alias-brand-primary, #4f7cff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary, #4f7cff) 18%, transparent); }
+.au-field { display: block; margin-bottom: 16px; font-size: 13.5px; font-weight: 500; color: var(--dsw-alias-label-primary, #1f2329); }
+.au-field .au-input { margin-top: 6px; }
 .au-expert .exp-text { min-height: 120px; resize: vertical; }
 .au-expert-actions { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 
@@ -857,7 +861,8 @@ const STYLE = `
 .au-artifact-head { display: flex; justify-content: space-between; align-items: center; }
 .au-artifact-title { font-size: 19px; font-weight: 650; }
 .au-artifact-actions { display: flex; gap: 6px; }
-.au-artifact-textarea { width: 100%; min-height: 360px; border: 1px solid var(--dsw-alias-border-l2, #e8e8e8); border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.7; font-family: inherit; resize: vertical; }
+.au-artifact-textarea { width: 100%; min-height: 360px; border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); background: var(--dsw-alias-bg-layer-2, #f5f5f5); border-radius: 8px; padding: 12px 14px; font-size: 14px; line-height: 1.55; font-family: inherit; outline: none; resize: vertical; transition: border-color 140ms ease, box-shadow 140ms ease; }
+.au-artifact-textarea:focus { border-color: var(--dsw-alias-brand-primary, #4f7cff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary, #4f7cff) 18%, transparent); }
 .au-artifact-body { max-width: 700px; }
 .au-artifact-confirm { margin: 14px 0; }
 

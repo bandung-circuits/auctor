@@ -373,18 +373,47 @@ function ExpertGatePane({ stage, insights, onSubmit, onSkip, onFetch, base }) {
     err ? h('p', { className: 'au-error' }, err) : null)
 }
 
+function excerptStats(md) {
+  const text = String(md || '')
+  const items = (text.match(/^## \[[^\]]+\]/gm) || []).length
+  const first = (text.match(/^## \[[^\]]+\] (.+)$/m) || [])[1] || ''
+  return { items, first }
+}
+
+function AngleModal({ angle, loading, content, onClose }) {
+  React.useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [onClose])
+  return h('div', { className: 'au-modal', onClick: onClose },
+    h('div', { className: 'au-modal-box', onClick: (e) => e.stopPropagation() },
+      h('div', { className: 'au-modal-head' },
+        h('div', { className: 'au-modal-title' }, angle.title || angle.id),
+        h('button', { className: 'au-btn ghost', onClick: onClose }, '✕')),
+      h('div', { className: 'au-modal-body' },
+        content
+          ? h(MiniMarkdown, { text: content })
+          : h('p', { className: 'au-dim' }, loading ? t('loading') : t('runningMarker')))))
+}
+
 function ResearchPane({ data, onFetch, onError, base }) {
   const [openId, setOpenId] = React.useState(null)
   const [bodies, setBodies] = React.useState({})
   const angles = (data && data.indexes && data.indexes.research) || []
-  const fetchBody = async (a) => {
-    setOpenId(a.id)
-    if (bodies[a.id]) return
-    try {
-      const r = await onFetch(base + a.file)
-      setBodies((b) => ({ ...b, [a.id]: r.content }))
-    } catch (e) { onError(String((e && e.message) || e)) }
-  }
+  // 挂载时把每个角度的摘录拉到本地：卡片展示摘要（条数 + 首条），点开弹 modal 看全量
+  React.useEffect(() => {
+    let alive = true
+    angles.forEach((a) => {
+      onFetch(base + a.file)
+        .then((r) => { if (alive) setBodies((b) => ({ ...b, [a.id]: r.content })) })
+        .catch((e) => onError(String((e && e.message) || e)))
+    })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data && data.indexes && data.indexes.research && data.indexes.research.length])
+  const openAngle = (a) => setOpenId(a.id)
+  const open = angles.find((a) => a.id === openId) || null
   return h('div', { className: 'au-pane' },
     h('h3', { className: 'au-pane-title' }, t('summaryTitle')),
     h('div', { className: 'au-reading' }, data.texts.summary ? h(MiniMarkdown, { text: data.texts.summary }) : h('p', { className: 'au-dim' }, t('runningMarker'))),
@@ -392,11 +421,17 @@ function ResearchPane({ data, onFetch, onError, base }) {
     h('p', { className: 'au-pane-hint' }, t('anglesHint')),
     angles.length === 0
       ? h('p', { className: 'au-dim' }, t('noAngles'))
-      : h('div', { className: 'au-fold-list' },
-        angles.map((a) => h('div', { key: a.id, className: 'au-fold' },
-          h('button', { className: 'au-fold-head', onClick: () => fetchBody(a) },
-            h('span', { className: 'chev' }, openId === a.id ? '▾' : '▸'), a.title || a.id, ' · ', a.file || ''),
-          openId === a.id && bodies[a.id] ? h('div', { className: 'au-fold-body' }, h(MiniMarkdown, { text: bodies[a.id] })) : null))))
+      : h('div', { className: 'au-angle-grid' },
+        angles.map((a) => {
+          const st = excerptStats(bodies[a.id])
+          return h('button', { key: a.id, className: 'au-angle-card', 'data-angle': a.id, onClick: () => openAngle(a) },
+            h('div', { className: 'au-angle-head' },
+              h('span', { className: 'au-angle-name' }, a.title || a.id),
+              bodies[a.id] ? h('span', { className: 'au-angle-count' }, String(st.items) + ' 条摘录') : h('span', { className: 'au-dim' }, t('loading'))),
+            h('div', { className: 'au-angle-excerpt' }, st.first || '…'))
+        })),
+    open ? h(AngleModal, { angle: open, content: bodies[open.id], loading: false, onClose: () => setOpenId(null) }) : null,
+  )
 }
 
 function DeepPane({ data, onFetch, onError, base }) {
@@ -837,6 +872,17 @@ const STYLE = `
 .au-dim { color: var(--dsw-alias-label-caption, #999); font-size: 13px; }
 
 .au-fold-list { margin-top: 8px; }
+.au-angle-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.au-angle-card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 12px 14px; border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); border-radius: 12px; background: var(--dsw-alias-bg-layer-1, #fafafa); cursor: pointer; transition: border-color 140ms ease, background 140ms ease; }
+.au-angle-card:hover { border-color: var(--dsw-alias-border-l3, #c8c8c8); background: var(--dsw-alias-bg-layer-2, #f5f5f5); }
+.au-angle-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.au-angle-name { font-size: 15px; font-weight: 650; color: var(--dsw-alias-label-primary, #1f2329); }
+.au-angle-count { font-size: 12px; color: var(--dsw-alias-label-caption, #999); white-space: nowrap; }
+.au-angle-excerpt { font-size: 13px; color: var(--dsw-alias-label-secondary, #666); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.au-modal { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, 0.38); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.au-modal-box { width: min(720px, 92vw); max-height: 82vh; overflow-y: auto; background: var(--dsw-alias-bg-overlay, #ffffff); border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); border-radius: 14px; padding: 18px 20px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); }
+.au-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.au-modal-title { font-size: 17px; font-weight: 650; }
 .au-fold { border: 1px solid var(--dsw-alias-border-l1, #f0f0f0); border-radius: 12px; margin-bottom: 6px; overflow: hidden; }
 .au-fold-head { display: flex; width: 100%; align-items: center; gap: 8px; padding: 9px 12px; text-align: left; font-size: 14px; }
 .au-fold-head:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.03)); }

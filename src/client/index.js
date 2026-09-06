@@ -13,7 +13,7 @@ const RPC = '/auctor'
 const I18N = {
   zh: {
     appName: 'Auctor',
-    newProject: '新建项目', newsLeadLabel: '新闻线索（一句话或网址）', newsLeadHint: '例如：Cuba hold 100 years of Fidel memorial activities',
+    newProject: '新建项目', newNav: '新建', newsLeadLabel: '新闻线索（一句话或网址）', newsLeadHint: '例如：Cuba hold 100 years of Fidel memorial activities',
     editorNotesLabel: '编辑注记（可选）', editorNotesHint: '你的初步判断、想切入的角度；留空亦可',
     create: '创建并开始', creating: '创建中…', createFailed: '创建失败',
     emptyNav: '暂无项目', newFirst: '从一条新闻线索开始你的评论。', newFirstHint: '点左上角「新建项目」，Auctor 会跑完快速研究与摘要，然后等你提供专家访谈素材。',
@@ -664,7 +664,7 @@ function Workbench({ ctx }) {
     h('div', { className: 'au-nav' },
       h('div', { className: 'au-nav-head' },
         h('div', { className: 'au-brand' }, t('appName')),
-        h('button', { className: 'au-btn primary', onClick: openNew }, '+ ', t('newProject'))),
+        h('button', { className: 'au-btn-new', onClick: openNew }, t('newNav'))),
       h('div', { className: 'au-nav-list' },
         err ? h('p', { className: 'au-error' }, err) : null,
         projects && projects.length
@@ -788,6 +788,8 @@ const STYLE = `
 .au-dot-run { width: 8px; height: 8px; border-radius: 50%; background: var(--dsw-alias-state-warn-primary, #d97706); display: inline-block; }
 
 .au-btn { border-radius: 12px; padding: 7px 16px; font-size: 14px; transition: background 150ms; }
+.au-btn-new { border: 1px solid transparent; background: var(--dsw-alias-button-primary-fill, #4f7cff); color: var(--dsw-alias-label-primary-foreground, #fff); border-radius: 8px; padding: 5px 12px; font-size: 13.5px; font-weight: 550; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.12); transition: background 140ms ease; }
+.au-btn-new:hover { background: var(--dsw-alias-button-primary-hover, #3a6ae0); }
 .au-btn.primary { background: var(--dsw-alias-accent, #4f7cff); color: #fff; }
 .au-btn.primary:disabled { opacity: 0.5; cursor: default; }
 .au-btn.ghost { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.04)); color: var(--dsw-alias-label-primary, #1f2329); }

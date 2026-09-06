@@ -34,7 +34,7 @@ const I18N = {
     downloadMd: '下载 Markdown', viewAll: '查看全部', materialTitle: '材料库', materialHint: 'materials/ 收录本项目的全部原文来源。',
     discussion: '讨论', discussHint: '给项目会话一句话：补充背景、要求调研究问题、换个方向重做要点/提纲/文章。你的决策会在同一会话继续。',
     discussPlaceholder: 'e.g. 把要点 3 换成侧重债务条款的博弈…', send: '发送',
-    initTitle: '确认选题并生成项目', projectTitle: '项目名称', planTitle: '接下来的流程', nextStep: '下一步：确认选题', confirmStart: '确认并启动', backStep: '返回修改', tocTitle: '目录', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
+    briefWorking: '正在理解事件并生成简介…', eventSummaryLabel: '事件确认', initTitle: '确认选题并生成项目', projectTitle: '项目名称', planTitle: '接下来的流程', nextStep: '下一步：确认选题', confirmStart: '确认并启动', backStep: '返回修改', tocTitle: '目录', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
     namePlaceholder: '项目标题', loading: '加载中…', error: '出错',
     gates: '四道门', markers: '阶段条可点击回看；修改已完成的上游产物后，下游需要你在讨论面板发起重做。',
   },
@@ -60,7 +60,7 @@ const I18N = {
     downloadMd: 'Download Markdown', viewAll: 'Show all', materialTitle: 'Materials', materialHint: 'materials/ holds the full-text sources of this project.',
     discussion: 'Discussion', discussHint: 'A line to the project session: add context, adjust questions, redo points/outline/article in a new direction. Decisions continue the same session.',
     discussPlaceholder: 'e.g. Replace point 3 with the debt-clause bargaining angle…', send: 'Send',
-    initTitle: 'Confirm the brief & create', projectTitle: 'Project title', planTitle: 'What happens next', nextStep: 'Next: review', confirmStart: 'Confirm & start', backStep: 'Back', tocTitle: 'Contents', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
+    briefWorking: 'Understanding the event…', eventSummaryLabel: 'Event', initTitle: 'Confirm the brief & create', projectTitle: 'Project title', planTitle: 'What happens next', nextStep: 'Next: review', confirmStart: 'Confirm & start', backStep: 'Back', tocTitle: 'Contents', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
     namePlaceholder: 'Project title', loading: 'Loading…', error: 'Error',
     gates: 'Gates', markers: 'The stage strip is clickable; after editing upstream artifacts, trigger a redo chain from the discussion panel.',
   },
@@ -272,7 +272,7 @@ function MilestoneStrip({ milestones, active, onPick }) {
   return h('div', { className: 'au-stages' },
     MILESTONES.map((m) => {
       const st = (milestones || []).find((x) => x && x.key === m.key)
-      const state = m.key === 'confirm' ? 'done' : (st ? st.status : 'waiting')
+      const state = st ? st.status : (m.key === 'confirm' ? 'done' : 'waiting')
       const on = active === m.key
       return h('button', { key: m.key, className: 'au-stage' + (on ? ' on' : ''), onClick: () => onPick(m.key), title: t('gates') },
         on ? h('span', { className: 'au-stage-on' }) : null,
@@ -657,32 +657,83 @@ function NewProjectPane({ ctx, onCreate }) {
   const [lead, setLead] = React.useState('')
   const [notes, setNotes] = React.useState('')
   const [title, setTitle] = React.useState('')
-  const [stage, setStage] = React.useState('form') // form | confirm
+  const [id, setId] = React.useState(null)
+  const [stage, setStage] = React.useState('form') // form | working | confirm
+  const [brief, setBrief] = React.useState('')
+  const [userTouchedTitle, setUserTouchedTitle] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState('')
-  const toConfirm = () => {
-    if (!lead.trim()) return
-    const t0 = lead.trim().split(/\n/)[0].trim()
-    setTitle(t0.length > 60 ? t0.slice(0, 60) + '…' : t0)
-    setStage('confirm')
+  const derivedRef = React.useRef('')
+  const parseBrief = (txt) => {
+    const t = String(txt || '')
+    const tm = t.match(/^Title:\s*(.+)$/mi)
+    const sm = t.match(/^Summary:\s*(.+)$/mi)
+    return { bTitle: tm ? tm[1].trim() : '', summary: sm ? sm[1].trim() : '' }
   }
-  const start = async () => {
-    setBusy(true); setErr('')
+  const briefMsg = () => (langStore.val === 'en'
+    ? 'Phase 0 (Brief): read input/news-lead.md (and input/editor-notes.md if present). In one short pass, restate the event in a line and suggest a concise project name. Write input/brief.md with "Title: <name>" and "Summary: <one-line restatement>". Then STOP — do not start any research, do not go online.'
+    : '第一阶段（Brief）：读取 input/news-lead.md（如有 editor-notes.md 一并读）。用一步简短处理，用一句话复述这个事件，并建议一个简练的项目名。写入 input/brief.md，格式 "Title: <项目名>" 与 "Summary: <一句话事件复述>"。然后停下，不要开始任何调研、不要联网。')
+  const confirmMsg = () => {
+    const name = title.trim() || lead.trim().split(/\n/)[0].trim()
+    return langStore.val === 'en'
+      ? 'The brief is confirmed (project name: ' + name + '). Now execute Group 00: run the 10-angle parallel research and synthesize the initial summary, advancing automatically until the expert-material gate, then stop.'
+      : '选题已确认（项目名：' + name + '）。现在执行 Group 00：十角度并行研究并综合出初始摘要，自动推进到专家素材门停下。'
+  }
+  const toConfirm = async () => {
+    if (!lead.trim()) return
+    setErr(''); setBusy(true); setStage('working')
     try {
       const r = await rpc(ctx, 'project.create', { newsLead: lead.trim(), editorNotes: notes.trim() })
-      if (title.trim() && title.trim() !== r.title) await rpc(ctx, 'project.rename', { id: r.id, title: title.trim() })
-      let sessionId
-      try { sessionId = await driveProjectSession(ctx, r.prompt) } catch (e) { setErr(t('createFailed') + '：' + String((e && e.message) || e)) }
-      if (sessionId) await rpc(ctx, 'project.attach', { id: r.id, sessionId })
-      if (onCreate) await onCreate(r ? r.id : null)
-    } catch (e) { setErr(String((e && e.message) || e)) } finally { setBusy(false) }
+      setId(r.id)
+      const t0 = lead.trim().split(/\n/)[0].trim()
+      derivedRef.current = t0.length > 60 ? t0.slice(0, 60) + '…' : t0
+      setTitle(derivedRef.current)
+      await rpc(ctx, 'project.rename', { id: r.id, title: derivedRef.current })
+      drivePrompt(ctx, r.id, briefMsg()).catch((e) => { if (!err) setErr(t('createFailed') + '（Brief 未生成，仍可确认启动）：' + String((e && e.message) || e)) })
+    } catch (e) { setErr(String((e && e.message) || e)) } finally { setBusy(false); setStage('confirm') }
   }
+  React.useEffect(() => {
+    if (stage !== 'confirm' || !id) return
+    let alive = true
+    const poll = async () => {
+      try {
+        const g = await rpc(ctx, 'project.get', { id })
+        if (alive && g && g.texts && g.texts.brief) {
+          setBrief(g.texts.brief)
+          const { bTitle } = parseBrief(g.texts.brief)
+          if (bTitle && !userTouchedTitle && title === derivedRef.current) setTitle(bTitle)
+        }
+      } catch { /* 忽略轮询错误 */ }
+    }
+    poll()
+    const iv = setInterval(poll, 2000)
+    return () => { alive = false; clearInterval(iv) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, id, userTouchedTitle])
+  const back = async () => {
+    if (id) { try { await rpc(ctx, 'project.delete', { id }) } catch { /* ignore */ } setId(null) }
+    setStage('form')
+  }
+  const start = async () => {
+    if (!id) { setErr('项目未创建'); return }
+    setBusy(true); setErr('')
+    try {
+      await rpc(ctx, 'project.rename', { id, title: title.trim() || derivedRef.current })
+      await drivePrompt(ctx, id, confirmMsg())
+      if (onCreate) await onCreate(id)
+    } catch (e) { setErr(t('createFailed') + '：' + String((e && e.message) || e)) } finally { setBusy(false) }
+  }
+  const { summary } = parseBrief(brief)
   if (stage === 'confirm') {
     const plan = langStore.val === 'en' ? PLAN_EN : PLAN_ZH
     return h('div', { className: 'au-pane' },
       h('h3', { className: 'au-pane-title' }, t('initTitle')),
+      summary ? h('div', { className: 'au-plan', style: { marginBottom: 8 } },
+        h('div', { className: 'au-plan-title' }, t('eventSummaryLabel')),
+        h('p', { style: { margin: 0, fontSize: 14, lineHeight: 1.6 } }, summary))
+        : h('p', { className: 'au-pane-hint' }, t('briefWorking')),
       h('label', { className: 'au-field' }, t('projectTitle'),
-        h('input', { className: 'au-input', value: title, onChange: (e) => setTitle(e.target.value) })),
+        h('input', { className: 'au-input', value: title, onChange: (e) => { setUserTouchedTitle(true); setTitle(e.target.value) } })),
       h('label', { className: 'au-field' }, t('newsLeadLabel'),
         h('textarea', { className: 'au-input', value: lead, onChange: (e) => setLead(e.target.value) })),
       h('label', { className: 'au-field' }, t('editorNotesLabel'),
@@ -691,7 +742,7 @@ function NewProjectPane({ ctx, onCreate }) {
         h('div', { className: 'au-plan-title' }, t('planTitle')),
         plan.map((p) => h('div', { key: p, className: 'au-plan-step' }, '· ' + p))),
       h('div', { className: 'au-expert-actions' },
-        h('button', { className: 'au-btn ghost', onClick: () => setStage('form'), disabled: busy }, t('backStep')),
+        h('button', { className: 'au-btn ghost', onClick: back, disabled: busy }, t('backStep')),
         h('button', { className: 'au-btn primary', onClick: start, disabled: busy }, busy ? t('creating') : t('confirmStart'))),
       err ? h('p', { className: 'au-error' }, err) : null)
   }

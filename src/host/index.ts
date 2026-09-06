@@ -17,7 +17,7 @@ const ROOT = resolve(dirname(THIS_FILE), '..') // lib/index.js → 包根
 export interface ProjectRecord { id: string; title: string; createdAt: string; updatedAt: string; sessionId?: string }
 export interface Milestone { key: string; status: string }
 export type MilestoneKey = 'research' | 'expert' | 'deep' | 'points' | 'outline' | 'article'
-const MILESTONE_KEYS: MilestoneKey[] = ['research', 'expert', 'deep', 'points', 'outline', 'article']
+const MILESTONE_KEYS: MilestoneKey[] = ['confirm', 'research', 'expert', 'deep', 'points', 'outline', 'article']
 
 // ---------- 纯函数（L1 可测） ----------
 
@@ -73,6 +73,8 @@ export function listFiles(root: string): string[] {
 
 export function milestonesOf(root: string): Milestone[] {
   const f = {
+    run: hasP(root, 'run.json'),
+    confirm: hasP(root, 'input/brief.md') || dirHasP(root, '01.research'),
     summary: hasP(root, '02.summary/initial-summary.md'),
     insightsMd: dirHasP(root, '03.expert-insights'),
     questions: hasP(root, '04.research-questions/research-questions.md'),
@@ -89,6 +91,8 @@ export function milestonesOf(root: string): Milestone[] {
   const isFailed = (...ids: string[]) => ids.some((id) => st(id) === 'failed' || st(id) === 'aborted')
 
   const mk = (key: MilestoneKey, status: string): Milestone => ({ key, status })
+
+  const confirm = (f.summary || f.confirm) ? 'done' : (f.run ? 'active' : 'waiting')
 
   const research = f.summary ? 'done'
     : isFailed('research', 'summary') ? 'failed'
@@ -121,7 +125,7 @@ export function milestonesOf(root: string): Milestone[] {
       : isActive('article') ? 'active'
         : f.article ? 'gated' : 'waiting'
 
-  return [mk('research', research), mk('expert', expert), mk('deep', deep), mk('points', points), mk('outline', outline), mk('article', article)]
+  return [mk('confirm', confirm), mk('research', research), mk('expert', expert), mk('deep', deep), mk('points', points), mk('outline', outline), mk('article', article)]
 }
 
 export function stageOf(root: string): string {
@@ -273,10 +277,13 @@ export function apply(ctx: any, config: any = {}) {
 
   const initialPrompt = (dir: string): string => {
     const hasSummary = fileExists(join(dir, '02.summary/initial-summary.md'))
+    const hasBrief = fileExists(join(dir, 'input/brief.md'))
     const head = `You are the Auctor project session for "${basename(dir)}". Agents blueprints under agents/, references (including the kritik framework under references/domain/kritik/), and pomasa.json are mounted here. Project state is read from run.json and the filesystem. Artifacts already on disk are ground truth: never regenerate or rewrite them unless the user explicitly asks. All reads and writes are confined to this project directory.`
-    const branch = !hasSummary
-      ? 'The initial research and summary are not done. Read input/news-lead.md (and input/editor-notes.md if it exists and is non-empty), then execute agents/00.orchestrator.md strictly and run Group 00 through the initial summary without stopping.'
-      : 'The initial summary is done. Check input/expert/: if transcript files exist, execute agents/10.orchestrator.md strictly and advance through expert processing, question generation and deep research straight to the commentary-points gate; if input/expert/skip.json exists, skip experts; if neither exists, report the current state and wait for instructions. Thereafter follow agents/10.orchestrator.md for the commentary points, outline and article gates.'
+    const branch = !hasSummary && !hasBrief
+      ? 'Phase 0 (Brief): research has not started. Read input/news-lead.md (and input/editor-notes.md if present). In one short pass, restate in a line what the event is and suggest a concise project name. Write them to input/brief.md in this exact shape: "Title: <suggested project name>\nSummary: <one-line restatement of the event>". Then STOP: do NOT start any research, do NOT call other agents, do NOT go online. Wait for the editor to confirm the brief before starting Group 00.'
+      : !hasSummary && hasBrief
+        ? 'The Brief (input/brief.md) is written and awaiting the editor\'s confirmation. Report the current state briefly and wait. Do NOT start Group 00 until the editor confirms.'
+        : 'The initial summary is done. Check input/expert/: if transcript files exist, execute agents/10.orchestrator.md strictly and advance through expert processing, question generation and deep research straight to the commentary-points gate; if input/expert/skip.json exists, skip experts; if neither exists, report the current state and wait for instructions. Thereafter follow agents/10.orchestrator.md for the commentary points, outline and article gates.'
     return [head, branch, 'Gates (expert material, commentary points, outline approval, article review) stop for human decision; every other stage runs straight through.', 'Read the relevant orchestrator blueprint and follow it exactly.'].join('\n\n')
   }
 
@@ -314,6 +321,7 @@ export function apply(ctx: any, config: any = {}) {
           files: listFiles(dir),
           texts: {
             newsLead: readText(join(dir, 'input', 'news-lead.md')),
+            brief: readText(join(dir, 'input', 'brief.md')),
             editorNotes: readText(join(dir, 'input', 'editor-notes.md')),
             runLog: readText(join(dir, 'run-log.md')),
             summary: readText(join(dir, '02.summary', 'initial-summary.md')),

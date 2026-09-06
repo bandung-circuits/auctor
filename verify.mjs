@@ -59,26 +59,27 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
   await check('milestonesOf 空项目全 waiting', () => {
     const root = tmpDir()
     const ms = _test.milestonesOf(root)
-    if (ms.length !== 6 || ms.some((m) => m.status !== 'waiting')) throw new Error(JSON.stringify(ms))
+    const core = ms.slice(1)
+    if (core.length !== 6 || ms[0].key !== 'confirm' || core.some((m) => m.status !== 'waiting')) throw new Error(JSON.stringify(ms))
     rmSync(root, { recursive: true, force: true })
   })
   await check('milestonesOf summary 之后 expert gated', () => {
     const root = tmpDir()
     mkdirSync(join(root, '02.summary'), { recursive: true })
     writeFileSync(join(root, '02.summary', 'initial-summary.md'), 's')
-    const ms = _test.milestonesOf(root)
-    if (ms[0].status !== 'done' || ms[1].status !== 'gated' || ms[3].status !== 'waiting') throw new Error(JSON.stringify(ms))
+    const core = _test.milestonesOf(root).slice(1)
+    if (core[0].status !== 'done' || core[1].status !== 'gated' || core[3].status !== 'waiting') throw new Error(JSON.stringify(core))
     rmSync(root, { recursive: true, force: true })
   })
   await check('milestonesOf accepted 之后 article done', () => {
     const root = tmpDir()
     mkdirSync(join(root, '08.article'), { recursive: true })
     writeFileSync(join(root, '08.article', 'article.md'), 'a')
-    let ms = _test.milestonesOf(root)
-    if (ms[5].status !== 'gated') throw new Error('article: ' + ms[5].status)
+    let core = _test.milestonesOf(root).slice(1)
+    if (core[5].status !== 'gated') throw new Error('article: ' + core[5].status)
     writeFileSync(join(root, '08.article', 'accepted.json'), '{}')
-    ms = _test.milestonesOf(root)
-    if (ms[5].status !== 'done') throw new Error('after accept: ' + ms[5].status)
+    core = _test.milestonesOf(root).slice(1)
+    if (core[5].status !== 'done') throw new Error('after accept: ' + core[5].status)
     rmSync(root, { recursive: true, force: true })
   })
 }
@@ -106,7 +107,7 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
     rec = await h.call('project.create', { newsLead: LEAD, editorNotes: '角度：中古建交' })
     const pd = join(dir, rec.id)
     if (!/^\d{8}-\d{3}$/.test(rec.id)) throw new Error('id ' + rec.id)
-    if (!rec.prompt.includes('00.orchestrator.md')) throw new Error('prompt')
+    if (!rec.prompt.includes('input/brief.md')) throw new Error('prompt')
     for (const need of ['agents/00.orchestrator.md', 'references/domain/kritik/KR-01-marxist-framework.md', 'pomasa.json', 'input/news-lead.md', 'run.json', 'materials/index.md']) {
       if (!existsSync(join(pd, need))) throw new Error('missing ' + need)
     }
@@ -122,7 +123,7 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
   await check('prompt 无会话时附续做指令', async () => {
     const r = await h.call('project.prompt', { id: rec.id, message: '干下去' })
     if (r.live) throw new Error('should be cold')
-    if (!r.prompt.includes('00.orchestrator.md') || !r.prompt.includes('干下去')) throw new Error('compose failed')
+    if (!r.prompt.includes('input/brief.md') || !r.prompt.includes('干下去')) throw new Error('compose failed')
   })
 
   await check('prompt 会话存活时直传消息', async () => {
@@ -135,7 +136,7 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
   await check('prompt 会话闲置时重新附续做指令', async () => {
     h.setRunning('sess-1', false)
     const r = await h.call('project.prompt', { id: rec.id, message: '继续' })
-    if (r.live || !r.prompt.includes('00.orchestrator.md')) throw new Error('idle compose failed')
+    if (r.live || !r.prompt.includes('input/brief.md')) throw new Error('idle compose failed')
   })
 
   await check('pulse 跟随 agent 注册表', async () => {
@@ -149,11 +150,11 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
   await check('里程碑：summary → expert gated → 素材就位 active', async () => {
     mkdirSync(join(pd, '02.summary'), { recursive: true })
     writeFileSync(join(pd, '02.summary', 'initial-summary.md'), 's')
-    let ms = _test.milestonesOf(pd)
-    if (ms[0].status !== 'done' || ms[1].status !== 'gated') throw new Error(JSON.stringify(ms))
+    let core = _test.milestonesOf(pd).slice(1)
+    if (core[0].status !== 'done' || core[1].status !== 'gated') throw new Error(JSON.stringify(core))
     await h.call('project.submitExperts', { id: rec.id, experts: [{ name: 'Prof A', role: 'X', transcript: 't' }] })
-    ms = _test.milestonesOf(pd)
-    if (ms[1].status !== 'active') throw new Error(JSON.stringify(ms))
+    core = _test.milestonesOf(pd).slice(1)
+    if (core[1].status !== 'active') throw new Error(JSON.stringify(core))
   })
 
   await check('submitExperts 落盘 + skip 标记', async () => {
@@ -171,20 +172,20 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
     mkdirSync(join(pd, '05.deep-research', 'Q1'), { recursive: true })
     writeFileSync(join(pd, '05.deep-research', 'Q1', 'excerpts.md'), 'd')
     writeFileSync(join(pd, '05.deep-research', 'index.json'), JSON.stringify([{ id: 'Q1', title: 'G1', file: 'Q1/excerpts.md' }]))
-    let ms = _test.milestonesOf(pd)
-    if (ms[1].status !== 'done' || ms[2].status !== 'done') throw new Error('deep: ' + JSON.stringify(ms))
+    let core = _test.milestonesOf(pd).slice(1)
+    if (core[1].status !== 'done' || core[2].status !== 'done') throw new Error('deep: ' + JSON.stringify(core))
     writeFileSync(join(pd, '06.commentary-points', 'commentary-points.md'), 'p')
-    ms = _test.milestonesOf(pd)
-    if (ms[3].status !== 'gated') throw new Error('points gated')
+    core = _test.milestonesOf(pd).slice(1)
+    if (core[3].status !== 'gated') throw new Error('points gated')
     writeFileSync(join(pd, '07.outline', 'outline.md'), 'o')
-    ms = _test.milestonesOf(pd)
-    if (ms[3].status !== 'done' || ms[4].status !== 'gated') throw new Error(JSON.stringify(ms))
+    core = _test.milestonesOf(pd).slice(1)
+    if (core[3].status !== 'done' || core[4].status !== 'gated') throw new Error(JSON.stringify(core))
     writeFileSync(join(pd, '08.article', 'article.md'), 'a')
-    ms = _test.milestonesOf(pd)
-    if (ms[4].status !== 'done' || ms[5].status !== 'gated') throw new Error(JSON.stringify(ms))
+    core = _test.milestonesOf(pd).slice(1)
+    if (core[4].status !== 'done' || core[5].status !== 'gated') throw new Error(JSON.stringify(core))
     await h.call('project.accept', { id: rec.id })
-    ms = _test.milestonesOf(pd)
-    if (ms[5].status !== 'done') throw new Error('article after accept')
+    core = _test.milestonesOf(pd).slice(1)
+    if (core[5].status !== 'done') throw new Error('article after accept')
   })
 
   await check('saveArtifact 写回 + 非法路径拒绝', async () => {
@@ -199,7 +200,7 @@ const LEAD = 'Cuba holds 100 years of Fidel memorial activities'
   await check('project.get 全量视图', async () => {
     const g = await h.call('project.get', { id: rec.id })
     if (g.stage !== 'done') throw new Error('stage ' + g.stage)
-    if (g.milestones.length !== 6) throw new Error('milestones')
+    if (g.milestones.length !== 7) throw new Error('milestones')
     if (!g.texts.summary || !g.texts.points || !g.texts.article) throw new Error('texts')
     if (g.indexes.deep.length !== 1) throw new Error('deep index')
     if (g.counts.sources < 0) throw new Error('counts')

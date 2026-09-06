@@ -320,7 +320,7 @@ function ArtifactText({ title, text, hint, onSave, onConfirm, confirmLabel, busy
   )
 }
 
-function BriefPane({ data, onConfirm }) {
+function BriefPane({ data, onConfirm, onManual }) {
   const [title, setTitle] = React.useState('')
   const [touched, setTouched] = React.useState(false)
   const brief = (data.texts && data.texts.brief) || ''
@@ -342,7 +342,7 @@ function BriefPane({ data, onConfirm }) {
     h('h3', { className: 'au-pane-title' }, t('stageConfirm')),
     summary ? h('p', { style: { fontSize: 14, lineHeight: 1.6, marginBottom: 14 } }, summary) : null,
     h('label', { className: 'au-field' }, t('projectTitle'),
-      h('input', { className: 'au-input', value: title, onChange: (e) => { setTouched(true); setTitle(e.target.value) } })),
+      h('input', { className: 'au-input', value: title, onChange: (e) => { setTouched(true); if (onManual) onManual(); setTitle(e.target.value) } })),
     h('div', { className: 'au-expert-actions' },
       h('button', { className: 'au-btn primary', onClick: () => onConfirm(title || current) }, t('confirmStart'))))
 }
@@ -595,9 +595,27 @@ function DetailPane({ ctx, id }) {
     if (!window.confirm(t('delConfirm', { t: (data && data.record && data.record.title) || id }))) return
     try { await rpc(ctx, 'project.delete', { id }); location && location.reload && location.reload() } catch (e) { setErr(String((e && e.message) || e)) }
   }
+  // pictor 同款：brief 就位后自动把项目名改写为 AI 建议名，仅『同份 brief 未应用过
+  // 且 用户未手动改过名』时执行一次；此后手动改名保留、不再回改。
+  const lastAppliedBrief = React.useRef('')
+  const manualRenameRef = React.useRef(false)
+  React.useEffect(() => {
+    if (!data || !data.texts || !data.texts.brief) return
+    const m = data.texts.brief.match(/^Title:\s*(.+)$/mi)
+    const proposed = m ? m[1].trim() : ''
+    if (!proposed) return
+    if (manualRenameRef.current) return
+    if (data.record && data.record.title === proposed) { lastAppliedBrief.current = proposed; return }
+    if (lastAppliedBrief.current === proposed) return
+    rpc(ctx, 'project.rename', { id, title: proposed })
+      .then(() => { lastAppliedBrief.current = proposed; load() })
+      .catch(() => {})
+  }, [data && data.texts && data.texts.brief, data && data.record && data.record.title, id])
+
   const rename = async () => {
     const title = nameDraft.trim()
     if (!title) return
+    manualRenameRef.current = true
     try { await rpc(ctx, 'project.rename', { id, title }); setRenaming(false); await load() } catch (e) { setErr(String((e && e.message) || e)) }
   }
 
@@ -621,6 +639,7 @@ function DetailPane({ ctx, id }) {
     switch (step) {
       case 'confirm': return h(BriefPane, {
         data,
+        onManual: () => { manualRenameRef.current = true },
         onConfirm: async (t) => {
           const name = String(t || '').trim() || (data.record && data.record.title)
           setBusy(true); setErr('')

@@ -802,7 +802,7 @@ const STYLE = `
 
 .au-empty { border: 1px dashed var(--dsw-alias-border-l2, #e8e8e8); border-radius: 16px; padding: 48px 24px; text-align: center; }
 .au-empty-fig { font-size: 44px; opacity: 0.35; margin-bottom: 12px; }
-.au-empty-img { width: 190px; max-width: 70%; border-radius: 12px; margin-bottom: 14px; }
+.au-empty-img { width: 200px; height: 200px; object-fit: cover; display: block; margin: 0 auto 14px; -webkit-mask-image: radial-gradient(ellipse closest-side, #000 52%, transparent 76%); mask-image: radial-gradient(ellipse closest-side, #000 52%, transparent 76%); }
 .au-hero { min-height: 62vh; display: flex; align-items: center; justify-content: center; }
 .au-empty-title { font-weight: 650; font-size: 18px; }
 .au-empty-hint { color: var(--dsw-alias-label-secondary, #666); font-size: 14px; max-width: 480px; margin: 8px auto 0; }

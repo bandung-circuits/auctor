@@ -844,7 +844,7 @@ function apply(ctx) {
 const STYLE = `
 .au-root * { box-sizing: border-box }
 .au-root { font-family: var(--dsw-alias-font-family, -apple-system, "PingFang SC", "Segoe UI", sans-serif); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; color: var(--dsw-alias-label-primary, #1f2329); }
-.au-root button { font: inherit; cursor: pointer; color: inherit; }
+.au-root button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 .au-root textarea, .au-root input { font: inherit; }
 
 .au-shell-root { position: absolute; inset: 0; z-index: 20; display: flex; align-items: stretch; pointer-events: none; background: transparent; }
@@ -869,19 +869,19 @@ const STYLE = `
 .au-badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; }
 .au-dot-run { width: 8px; height: 8px; border-radius: 50%; background: var(--dsw-alias-state-warn-primary, #d97706); display: inline-block; }
 
-.au-btn { border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); background: var(--dsw-alias-bg-layer-2, #f5f5f5); color: var(--dsw-alias-label-primary, #1f2329); border-radius: 8px; padding: 7px 14px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease; user-select: none; white-space: nowrap; }
-.au-btn:hover:not(:disabled) { background: var(--dsw-alias-bg-layer-3, var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.05))); border-color: var(--dsw-alias-border-l3, #d0d0d0); }
-.au-btn:active { transform: translateY(0.5px); }
-.au-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary, #4f7cff); outline-offset: 2px; }
+.au-root .au-btn { border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); background: var(--dsw-alias-bg-layer-2, #f5f5f5); color: var(--dsw-alias-label-primary, #1f2329); border-radius: 8px; padding: 7px 14px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease; user-select: none; white-space: nowrap; }
+.au-root .au-btn:hover:not(:disabled) { background: var(--dsw-alias-bg-layer-3, var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.05))); border-color: var(--dsw-alias-border-l3, #d0d0d0); }
+.au-root .au-btn:active { transform: translateY(0.5px); }
+.au-root .au-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary, #4f7cff); outline-offset: 2px; }
 .au-root .au-btn-new { border: 1px solid transparent; background: var(--dsw-alias-button-primary-fill, #4f7cff); color: var(--dsw-alias-label-primary-foreground, #fff); border-radius: 8px; padding: 5px 12px; font-size: 13.5px; font-weight: 550; cursor: pointer; white-space: nowrap; flex: none; box-shadow: 0 1px 2px rgba(0,0,0,0.12); transition: background 140ms ease; }
 .au-root .au-btn-new:hover { background: var(--dsw-alias-button-primary-hover, #3a6ae0); }
-.au-btn.primary { background: var(--dsw-alias-button-primary-fill, #4f7cff); border-color: transparent; color: var(--dsw-alias-label-primary-foreground, #fff); font-weight: 550; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
-.au-btn.primary:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover, #3a6ae0); }
-.au-btn.ghost { background: transparent; border-color: transparent; color: var(--dsw-alias-label-dimmed, #777); }
-.au-btn.ghost:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.05)); color: var(--dsw-alias-label-primary, #1f2329); border-color: transparent; }
-.au-btn.link { color: var(--dsw-alias-label-secondary, #666); text-decoration: underline; font-size: 13px; background: transparent; border-color: transparent; padding: 4px 6px; }
-.au-btn.danger { color: var(--dsw-alias-state-error-primary, #dc2626) !important; }
-.au-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.au-root .au-btn.primary { background: var(--dsw-alias-button-primary-fill, #4f7cff); border-color: transparent; color: var(--dsw-alias-label-primary-foreground, #fff); font-weight: 550; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+.au-root .au-btn.primary:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover, #3a6ae0); }
+.au-root .au-btn.ghost { background: transparent; border-color: transparent; color: var(--dsw-alias-label-dimmed, #777); }
+.au-root .au-btn.ghost:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.05)); color: var(--dsw-alias-label-primary, #1f2329); border-color: transparent; }
+.au-root .au-btn.link { color: var(--dsw-alias-label-secondary, #666); text-decoration: underline; font-size: 13px; background: transparent; border-color: transparent; padding: 4px 6px; }
+.au-root .au-btn.danger { color: var(--dsw-alias-state-error-primary, #dc2626) !important; }
+.au-root .au-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
 .au-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 44px 24px; text-align: center; gap: 10px; color: var(--dsw-alias-label-dimmed, #777); border: 1px dashed var(--dsw-alias-border-l2, #e8e8e8); border-radius: 14px; background: var(--dsw-alias-bg-layer-1, #fafafa); }
 .au-empty-hero { border: none; background: transparent; padding: 56px 28px; gap: 12px; }
@@ -934,8 +934,8 @@ const STYLE = `
 
 .au-fold-list { margin-top: 8px; }
 .au-angle-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.au-angle-card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 14px 16px; border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); border-radius: 12px; background: var(--dsw-alias-bg-layer-1, #fafafa); cursor: pointer; transition: border-color 150ms ease, box-shadow 150ms ease; }
-.au-angle-card:hover { border-color: var(--dsw-alias-border-l3, #c8c8c8); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.au-root .au-angle-card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 14px 16px; border: 1px solid var(--dsw-alias-border-l2, #e0e0e0); border-radius: 12px; background: var(--dsw-alias-bg-layer-1, #fafafa); cursor: pointer; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.au-root .au-angle-card:hover { border-color: var(--dsw-alias-border-l3, #c8c8c8); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
 .au-angle-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .au-angle-name { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; color: var(--dsw-alias-label-primary, #1f2329); }
 .au-angle-count { font-size: 12px; color: var(--dsw-alias-label-caption, #999); white-space: nowrap; }

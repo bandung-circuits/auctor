@@ -34,7 +34,7 @@ const I18N = {
     downloadMd: '下载 Markdown', viewAll: '查看全部', materialTitle: '材料库', materialHint: 'materials/ 收录本项目的全部原文来源。',
     discussion: '讨论', discussHint: '给项目会话一句话：补充背景、要求调研究问题、换个方向重做要点/提纲/文章。你的决策会在同一会话继续。',
     discussPlaceholder: 'e.g. 把要点 3 换成侧重债务条款的博弈…', send: '发送',
-    langLabel: '语言', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
+    rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
     namePlaceholder: '项目标题', loading: '加载中…', error: '出错',
     gates: '四道门', markers: '阶段条可点击回看；修改已完成的上游产物后，下游需要你在讨论面板发起重做。',
   },
@@ -60,19 +60,28 @@ const I18N = {
     downloadMd: 'Download Markdown', viewAll: 'Show all', materialTitle: 'Materials', materialHint: 'materials/ holds the full-text sources of this project.',
     discussion: 'Discussion', discussHint: 'A line to the project session: add context, adjust questions, redo points/outline/article in a new direction. Decisions continue the same session.',
     discussPlaceholder: 'e.g. Replace point 3 with the debt-clause bargaining angle…', send: 'Send',
-    langLabel: 'Language', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
+    rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
     namePlaceholder: 'Project title', loading: 'Loading…', error: 'Error',
     gates: 'Gates', markers: 'The stage strip is clickable; after editing upstream artifacts, trigger a redo chain from the discussion panel.',
   },
 }
 
-let savedLang = 'zh'
-try { savedLang = typeof localStorage !== 'undefined' ? localStorage.getItem('auctor-lang') : null } catch { /* ignore */ }
+function readBandungLang() {
+  try {
+    if (typeof window !== 'undefined' && window.__dshAppDock__ && window.__dshAppDock__.lang) return window.__dshAppDock__.lang.get()
+    return typeof localStorage !== 'undefined' ? (localStorage.getItem('bandung-lang') === 'en' ? 'en' : 'zh') : 'zh'
+  } catch { return 'zh' }
+}
 const langStore = {
-  val: savedLang === 'en' ? 'en' : 'zh',
+  val: readBandungLang(),
   subs: new Set(),
   emit() { for (const f of this.subs) f() },
-  set(v) { this.val = v === 'en' ? 'en' : 'zh'; try { localStorage.setItem('auctor-lang', this.val) } catch { /* ignore */ } this.emit() },
+  set(v) {
+    this.val = v === 'en' ? 'en' : 'zh'
+    try { localStorage.setItem('bandung-lang', this.val) } catch { /* ignore */ }
+    if (typeof window !== 'undefined' && window.__dshAppDock__ && window.__dshAppDock__.lang) window.__dshAppDock__.lang.set(this.val)
+    this.emit()
+  },
   subscribe(f) { this.subs.add(f); return () => { this.subs.delete(f) } },
 }
 function useLang() {
@@ -84,16 +93,6 @@ function t(key, vars) {
   let text = (I18N[langStore.val] && I18N[langStore.val][key]) || I18N.zh[key] || key
   if (vars) { for (const k of Object.keys(vars)) text = text.replace('{' + k + '}', String(vars[k])) }
   return text
-}
-function LangSwitch() {
-  const lang = useLang()
-  const opt = (code, label) => h('button', {
-    className: 'au-lang-opt' + (lang === code ? ' on' : ''),
-    onClick: () => langStore.set(code),
-  }, label)
-  return h('div', { className: 'au-lang' },
-    h('span', { className: 'au-lang-label' }, t('langLabel')),
-    h('div', { className: 'au-lang-opts' }, opt('zh', '中文'), opt('en', 'English')))
 }
 
 // ---------- 工具 ----------
@@ -671,8 +670,6 @@ function Workbench({ ctx }) {
         projects && projects.length
           ? projects.map(navItem)
           : h('p', { className: 'au-dim au-nav-empty' }, t('emptyNav'))),
-      h('div', { className: 'au-nav-foot' },
-        h(LangSwitch, null)),
     ),
     h('div', { className: 'au-main' },
       h('div', { className: 'au-wrap' }, main)))
@@ -743,6 +740,12 @@ function apply(ctx) {
   const registerWithDock = () => {
     if (typeof window === 'undefined' || !window.__dshAppDock__) return
     window.__dshAppDock__.register({ id: 'dsh-auctor', label: 'Auctor', icon: '✒', order: 30, onToggle: () => panel.toggle() })
+    if (window.__dshAppDock__.lang) {
+      window.__dshAppDock__.lang.subscribe(() => {
+        const v = window.__dshAppDock__.lang.get()
+        if (langStore.val !== v) { langStore.val = v; langStore.emit() }
+      })
+    }
   }
   if (typeof window !== 'undefined' && !window.__dshAppDock__) {
     window.addEventListener('dsh-app-dock:ready', registerWithDock, { once: true })
@@ -776,7 +779,6 @@ const STYLE = `
 .au-brand { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
 .au-nav-list { flex: 1; overflow-y: auto; padding: 8px; }
 .au-nav-empty { padding: 12px; }
-.au-nav-foot { padding: 10px 14px; border-top: 1px solid var(--dsw-alias-border-l1, #f0f0f0); display: flex; justify-content: space-between; align-items: center; }
 .au-nav-item { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; background: none; }
 .au-nav-item:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.04)); }
 .au-nav-item.on { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,0.08)); }
@@ -870,10 +872,6 @@ const STYLE = `
 .au-settings-row { display: flex; gap: 10px; margin: 6px 0; font-size: 14px; }
 .au-settings-k { color: var(--dsw-alias-label-secondary, #666); min-width: 100px; }
 
-.au-lang { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.au-lang-opts { display: flex; }
-.au-lang-opt { padding: 3px 10px; border-radius: 999px; font-size: 13px; color: var(--dsw-alias-label-caption, #999); }
-.au-lang-opt.on { background: var(--dsw-alias-accent, #4f7cff); color: #fff; }
 `
 
 // build.mjs 包装时在 factory 内追加 `return { inject, apply }`

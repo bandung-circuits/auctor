@@ -10,9 +10,11 @@ test('工作台：fixture 项目按要点门状态呈现，可编辑并保存要
   test.setTimeout(120_000)
   await page.goto('/')
 
-  // 1) footer 按钮出现并打开工作台
-  await page.waitForSelector('.au-footer-action', { timeout: 60_000 })
-  await click(page, '.au-footer-action')
+  // 1) 坞按钮出现 → 打开坞 → 点 Auctor 进入工作台（auctor 入口在坞里）
+  await page.waitForSelector('.dk-footer-action', { timeout: 60_000 })
+  await click(page, '.dk-footer-action')
+  await page.waitForSelector('.dk-app:has-text("Auctor")', { timeout: 30_000 })
+  await click(page, '.dk-app:has-text("Auctor")')
   await page.waitForSelector('.au-workbench', { timeout: 30_000 })
 
   // 2) 左栏出现 fixture 项目

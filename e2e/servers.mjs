@@ -64,6 +64,8 @@ function seedFixture() {
 
 seedFixture()
 execFileSync('dsh', ['--profile', 'web', '--help'], { env: { ...process.env, DSH_HOME }, stdio: 'ignore' })
+// 坞先装（bundles 先于 auctor，register 发生在 auctor apply 之前，auctor 才入坞）
+execFileSync('dsh', ['plugin', '--profile', 'web', 'add', join(ROOT, '..', 'dsh-app-dock')], { env: { ...process.env, DSH_HOME }, stdio: 'ignore' })
 execFileSync('dsh', ['plugin', '--profile', 'web', 'add', ROOT], { env: { ...process.env, DSH_HOME }, stdio: 'ignore' })
 console.log('fixture home:', HOME)
 

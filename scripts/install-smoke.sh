@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
-# L5 install smoke: the README install path (`dsh plugin add dsh-auctor`),
-# hermetic and repeatable.
+# L5 install smoke: README 安装路径（`dsh plugin add dsh-auctor`），封闭可重复。
 #
-# Default (CI): pack the CURRENT repo into a tarball — `files` whitelist
-# included — install it into a fresh temp profile via `dsh plugin add`, boot a
-# real dsh web, and assert the /auctor RPC channel and the client bundle are
-# served. Tests the code being pushed, not an older published build.
-#
-# Registry mode: AUCTOR_INSTALL_SPEC=dsh-auctor installs from npm instead —
-# the exact README flow, for release verification after publish.
-#
-# Never touches a real profile: DSH_HOME/AUCTOR_HOME point at a temp dir that
-# is removed on exit. dsh/pnpm must be on PATH (exit 2 = "skipped", for hooks).
+# auctor 依赖 dsh-app-dock（成员应用入伙方式）：本地目录模式下先
+# `dsh plugin add <dock-root>` 再装 auctor（目录安装时 pnpm 按
+# package.json 的 `link:../dsh-app-dock` 解析到兄弟仓库）。发布后
+# AUCTOR_INSTALL_SPEC=dsh-auctor 走 npm registry（届时依赖改为 ^0.1.0）。
+# tarball 完整性由 package-integrity.sh 单独保证。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DOCK_ROOT="$(cd "$ROOT" && pwd)/../dsh-app-dock"
 PORT="${AUCTOR_INSTALL_PORT:-43995}"
 BASE="/tmp/auctor-install-smoke-$$"
 
@@ -30,43 +25,25 @@ export DSH_HOME="$BASE/dsh_home"
 export AUCTOR_HOME="$BASE/auctor_home"
 mkdir -p "$AUCTOR_HOME"
 
-# --- pick install source ---------------------------------------------------
 SPEC="${AUCTOR_INSTALL_SPEC:-}"
 if [ -n "$SPEC" ]; then
-  PKG="$SPEC"
   MODE="registry:${SPEC}"
 else
-  DEST="$BASE/pkg"
-  mkdir -p "$DEST"
-  (cd "$ROOT" && npm pack --pack-destination "$DEST" >/dev/null)
-  PKG_FILE="$(ls "$DEST"/*.tgz | head -1)"
-  [ -n "$PKG_FILE" ] || { echo "FAIL: no tarball produced" >&2; exit 1; }
-  # Package integrity: every path the host needs at boot must be in the tarball.
-  FAIL=0
-  for need in \
-    package/lib/index.js \
-    package/lib/client.js \
-    package/lib/mcp.js \
-    package/cordis.patch.yml \
-    package/pomasa.json \
-    package/agents/00.orchestrator.md \
-    package/agents/10.orchestrator.md \
-    package/references/domain/kritik/KR-01-marxist-framework.md \
-    package/references/domain/style-guide.md; do
-    if ! tar tzf "$PKG_FILE" | grep -qFx "$need"; then
-      echo "FAIL: tarball missing $need" >&2
-      FAIL=1
-    fi
-  done
-  [ "$FAIL" = "0" ] || { echo "tarball: $(basename "$PKG_FILE")" >&2; exit 1; }
-  PKG="$PKG_FILE"
-  MODE="local-tarball:$(basename "$PKG_FILE")"
+  [ -d "$DOCK_ROOT" ] || { echo "FAIL: dock 仓库不存在 $DOCK_ROOT" >&2; exit 1; }
+  MODE="local-dirs(dock+auctor)"
 fi
 
 # --- the README flow -------------------------------------------------------
 dsh --profile web --help >/dev/null 2>&1
-dsh plugin --profile web add "$PKG" >/dev/null 2>&1 \
-  || { echo "FAIL: dsh plugin add $PKG" >&2; exit 1; }
+if [ -n "$SPEC" ]; then
+  dsh plugin --profile web add "$SPEC" >/dev/null 2>&1 \
+    || { echo "FAIL: dsh plugin add $SPEC" >&2; exit 1; }
+else
+  dsh plugin --profile web add "$DOCK_ROOT" >/dev/null 2>&1 \
+    || { echo "FAIL: dsh plugin add $DOCK_ROOT" >&2; exit 1; }
+  dsh plugin --profile web add "$ROOT" >/dev/null 2>&1 \
+    || { echo "FAIL: dsh plugin add $ROOT" >&2; exit 1; }
+fi
 
 PLUGIN_ROOT="$DSH_HOME/profiles/web/node_modules/dsh-auctor"
 for f in lib/index.js lib/client.js cordis.patch.yml package.json; do
@@ -74,6 +51,8 @@ for f in lib/index.js lib/client.js cordis.patch.yml package.json; do
 done
 grep -q 'dsh-auctor' "$DSH_HOME/profiles/web/package.json" \
   || { echo "FAIL: profile manifest does not list dsh-auctor" >&2; exit 1; }
+grep -q 'dsh-app-dock' "$DSH_HOME/profiles/web/package.json" \
+  || { echo "FAIL: profile manifest does not list dsh-app-dock" >&2; exit 1; }
 
 # --- boot and assert -------------------------------------------------------
 dsh --profile web --no-open --port "$PORT" >"$BASE/dsh.log" 2>&1 &
@@ -105,8 +84,10 @@ RESP2="$(curl -s -X POST "http://127.0.0.1:${PORT}/auctor/config.get" \
 echo "$RESP2" | grep -q '"ok":true' && echo "$RESP2" | grep -q 'dataRoot' \
   || { echo "FAIL: config.get should return dataRoot — $RESP2" >&2; exit 1; }
 
-# Client bundle served.
+# Client bundles served.
 curl -sf "http://127.0.0.1:${PORT}/plugins/dsh-auctor/client.js" -o /dev/null \
-  || { echo "FAIL: client bundle not served" >&2; exit 1; }
+  || { echo "FAIL: auctor client bundle not served" >&2; exit 1; }
+curl -sf "http://127.0.0.1:${PORT}/plugins/dsh-app-dock/client.js" -o /dev/null \
+  || { echo "FAIL: dock client bundle not served" >&2; exit 1; }
 
 echo "install smoke OK (${MODE}, port ${PORT}, /auctor reachable)"

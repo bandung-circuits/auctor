@@ -720,7 +720,7 @@ function apply(ctx) {
     document.addEventListener('mousedown', (e) => {
       if (!panel.open) return
       const target = e.target
-      if (target && typeof target.closest === 'function' && (target.closest('.au-shell-panel') || target.closest('.au-footer-action'))) return
+      if (target && typeof target.closest === 'function' && target.closest('.au-shell-panel')) return
       panel.close()
     })
   }
@@ -755,24 +755,17 @@ function apply(ctx) {
       h('div', { className: 'au-shell-panel' }, h(Workbench, { ctx, key: 'shell' })))
   }
 
-  function FooterAction() {
-    useLang()
-    const open = usePanelOpen()
-    return h('div', {
-      className: 'au-footer-action' + (open ? ' on' : ''),
-      role: 'button',
-      tabIndex: 0,
-      onClick: () => panel.toggle(),
-      onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); panel.toggle() } },
-      title: open ? t('close') : t('open'),
-      'aria-expanded': open ? 'true' : 'false',
-    }, h('span', { className: 'glyph' }, '✒'), t('appName'))
+  // 入坞：dsh-app-dock 是 auctor 的依赖，入口交给坞，auctor 不再自占 footer 槽。
+  // 容忍加载顺序：注册表已就位即注册；否则等 dsh-app-dock:ready 事件（once）。
+  const registerWithDock = () => {
+    if (typeof window === 'undefined' || !window.__dshAppDock__) return
+    window.__dshAppDock__.register({ id: 'dsh-auctor', label: 'Auctor', icon: '✒', order: 30, onToggle: () => panel.toggle() })
   }
+  if (typeof window !== 'undefined' && !window.__dshAppDock__) {
+    window.addEventListener('dsh-app-dock:ready', registerWithDock, { once: true })
+  }
+  registerWithDock()
 
-  slots.inject('sidebar.footer.action', () => slots.register(
-    { name: 'sidebar.footer.action', id: 'dsh-auctor', order: 20, label: 'Auctor' },
-    () => h(FooterAction, null),
-  ))
   slots.inject('shell.overlay', () => slots.register(
     { name: 'shell.overlay', id: 'dsh-auctor', order: 10, label: 'Auctor' },
     () => h(WorkbenchPanel, null),
@@ -898,10 +891,6 @@ const STYLE = `
 .au-lang-opts { display: flex; }
 .au-lang-opt { padding: 3px 10px; border-radius: 999px; font-size: 13px; color: var(--dsw-alias-label-caption, #999); }
 .au-lang-opt.on { background: var(--dsw-alias-accent, #4f7cff); color: #fff; }
-
-.au-footer-action { cursor: pointer; padding: 7px 12px; font-size: 14px; font-weight: 600; color: var(--dsw-alias-label-primary, #1f2329); display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: background 150ms, color 150ms; border-radius: 8px; margin: 2px 8px; white-space: nowrap; background: var(--dsw-alias-button-floating-fill, #f5f5f5); }
-.au-footer-action:hover { background: var(--dsw-alias-button-floating-hover, #e9e9e9); }
-.au-footer-action.on { background: var(--dsw-alias-state-business-primary, #4176e6); color: var(--dsw-alias-brand-primary-invert, #fff); }
 `
 
 // build.mjs 包装时在 factory 内追加 `return { inject, apply }`

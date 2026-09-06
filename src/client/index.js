@@ -281,7 +281,7 @@ function MilestoneStrip({ milestones, active, onPick }) {
 }
 
 function EmptyState({ title, hint, img }) {
-  return h('div', { className: 'au-empty' },
+  return h('div', { className: 'au-empty' + (img ? ' au-empty-hero' : '') },
     img
       ? h('img', { className: 'au-empty-img', src: '/auctor/asset/meme.jpg', alt: '' })
       : h('div', { className: 'au-empty-fig' }, '✎'),

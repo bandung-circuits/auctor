@@ -17,7 +17,7 @@ const I18N = {
     editorNotesLabel: '编辑注记（可选）', editorNotesHint: '你的初步判断、想切入的角度；留空亦可',
     create: '创建并开始', creating: '创建中…', createFailed: '创建失败',
     emptyNav: '暂无项目', newFirst: '从一条新闻线索开始你的评论。', newFirstHint: '点左上角「新建项目」，Auctor 会跑完快速研究与摘要，然后等你提供专家访谈素材。',
-    stageResearch: '快速研究', stageExpert: '专家素材', stageDeep: '深度研究', stagePoints: '评论要点', stageOutline: '提纲', stageArticle: '成稿',
+    stageConfirm: '确认选题', stageResearch: '快速研究', stageExpert: '专家素材', stageDeep: '深度研究', stagePoints: '评论要点', stageOutline: '提纲', stageArticle: '成稿',
     stWaiting: '等待', stActive: '进行中', stGated: '待你决定', stDone: '完成', stFailed: '失败', stSkipped: '跳过',
     runningMarker: '运行中', refreshHint: '会话已停，去讨论面板发一句话续跑',
     summaryTitle: '初始摘要', anglesTitle: '十角度研究', anglesHint: '展开查看各角度的摘录（材料库在下方）',
@@ -43,7 +43,7 @@ const I18N = {
     editorNotesLabel: 'Editor notes (optional)', editorNotesHint: 'Your initial observations or angles',
     create: 'Create & start', creating: 'Creating…', createFailed: 'Create failed',
     emptyNav: 'No projects', newFirst: 'Start a commentary from one news lead.', newFirstHint: 'Click "New project" top-left. Auctor runs quick research and summary, then waits for your expert material.',
-    stageResearch: 'Research', stageExpert: 'Experts', stageDeep: 'Deep research', stagePoints: 'Points', stageOutline: 'Outline', stageArticle: 'Article',
+    stageConfirm: 'Brief', stageResearch: 'Research', stageExpert: 'Experts', stageDeep: 'Deep research', stagePoints: 'Points', stageOutline: 'Outline', stageArticle: 'Article',
     stWaiting: 'Waiting', stActive: 'Running', stGated: 'Your call', stDone: 'Done', stFailed: 'Failed', stSkipped: 'Skipped',
     runningMarker: 'running', refreshHint: 'Session is idle. Send a line in the discussion panel to resume.',
     summaryTitle: 'Initial summary', anglesTitle: '10-angle research', anglesHint: 'Expand each angle to read its excerpts (materials below).',
@@ -254,6 +254,7 @@ function blobDownload(name, text) {
 // ---------- 状态标签 ----------
 
 const MILESTONES = [
+  { key: 'confirm', label: 'stageConfirm' },
   { key: 'research', label: 'stageResearch' },
   { key: 'expert', label: 'stageExpert' },
   { key: 'deep', label: 'stageDeep' },
@@ -271,7 +272,7 @@ function MilestoneStrip({ milestones, active, onPick }) {
   return h('div', { className: 'au-stages' },
     MILESTONES.map((m) => {
       const st = (milestones || []).find((x) => x && x.key === m.key)
-      const state = st ? st.status : 'waiting'
+      const state = m.key === 'confirm' ? 'done' : (st ? st.status : 'waiting')
       const on = active === m.key
       return h('button', { key: m.key, className: 'au-stage' + (on ? ' on' : ''), onClick: () => onPick(m.key), title: t('gates') },
         on ? h('span', { className: 'au-stage-on' }) : null,
@@ -649,8 +650,8 @@ function ArticlePane({ data, onFetch, onError, onAccept, mSt }) {
 
 // ---------- 新建 ----------
 
-const PLAN_ZH = ['十角度并行背景研究', '综合出初始事件摘要', '等待你提供专家访谈素材', '深度研究（研究问题 + 分组深研）', '评论要点评审', '文章提纲评审', '成稿评审与定稿']
-const PLAN_EN = ['10-angle parallel background research', 'Synthesize the initial event summary', 'Wait for your expert interview material', 'Deep research (questions + group research)', 'Commentary points review', 'Article outline review', 'Final draft review']
+const PLAN_ZH = ['确认选题与项目信息', '十角度并行背景研究', '综合出初始事件摘要', '等待你提供专家访谈素材', '深度研究（研究问题 + 分组深研）', '评论要点评审', '文章提纲评审', '成稿评审与定稿']
+const PLAN_EN = ['Confirm the brief & project info', '10-angle parallel background research', 'Synthesize the initial event summary', 'Wait for your expert interview material', 'Deep research (questions + group research)', 'Commentary points review', 'Article outline review', 'Final draft review']
 
 function NewProjectPane({ ctx, onCreate }) {
   const [lead, setLead] = React.useState('')

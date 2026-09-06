@@ -24,7 +24,7 @@ test('工作台：fixture 项目按要点门状态呈现，可编辑并保存要
   await click(page, '.au-nav-item')
   await page.waitForSelector('.au-stages', { timeout: 30_000 })
   const stageCount = await page.$$('.au-stage')
-  expect(stageCount.length).toBe(6)
+  expect(stageCount.length).toBe(7)
   const stageTexts = await page.$$eval('.au-stage', (els) => els.map((e) => e.textContent))
   const pointsSeg = stageTexts.findIndex((s) => s && s.includes('评论要点'))
   expect(pointsSeg).toBeGreaterThan(-1)

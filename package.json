@@ -1,6 +1,6 @@
 {
   "name": "dsh-auctor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Auctor：新闻评论生产工作台。从一条新闻线索到可发表的深度评论，每项目一个连贯 dsh 会话，GUI 为 shell.overlay 工作台（左栏项目、右栏六段流水线：快速研究→专家素材→深度研究→评论要点→提纲→成稿），行为全部交给 DSH 智能运行时。",
   "type": "module",
   "repository": {

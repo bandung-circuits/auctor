@@ -81,6 +81,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "markdown-it": "^15.0.1",
+    "markdown-it-footnote": "^4.0.0"
   }
 }

@@ -45,7 +45,7 @@ function seedFixture() {
   write(root, 'materials/SRC-A-001.md', '# [SRC-A-001] Example\n\n**Source URL**: https://example.com\n\nBody.\n')
   write(root, '01.research/A-event-overview/excerpts.md', '# Event Overview — Relevant Excerpts\n\n## [M-A-001] Fidel centennial\n\n**Source**: SRC-A-001\n**Relevance**: Key event facts\n\n> Excerpt content.\n')
   write(root, '01.research/index.json', JSON.stringify([{ id: 'A-event-overview', title: 'Event Overview', file: 'A-event-overview/excerpts.md', producer: '01.researcher' }]))
-  write(root, '02.summary/initial-summary.md', '# Initial Event Summary\n\n## News Lead\n\nCuba holds Fidel centennial.\n\n## Contradictions and Tensions\n\n### Principal Contradiction\n\nMemory politics vs material need.\n')
+  write(root, '02.summary/initial-summary.md', '# Initial Event Summary\n\n## News Lead\n\nCuba holds Fidel centennial.\n\n## Contradictions and Tensions\n\n### Principal Contradiction\n\nMemory politics vs material need.\n\n- **Attribution:** A contested attribution that needs evidence.\n- A companion bullet.\n\n## Key Figures\n\n| Field | Value |\n|---|---|\n| Attendance | Thousands |\n| Events | 100+ |\n')
   write(root, '02.summary/index.json', JSON.stringify([{ id: 'summary', title: 'Initial Event Summary', file: 'initial-summary.md', producer: '02.summarizer' }]))
   write(root, '03.expert-insights/prof-a.md', '# Expert Insight: Prof A\n\n## Core Points\n\n1. The centennial is a political event.\n')
   write(root, '03.expert-insights/index.json', JSON.stringify([{ id: 'prof-a', title: 'Prof A', file: 'prof-a.md', producer: '11.expert-processor' }]))
@@ -58,11 +58,39 @@ function seedFixture() {
   write(root, 'run.json', JSON.stringify(RUN_JSON, null, 2))
   write(root, 'run-log.md', '# Run Log — 2026-09-05-001\n\n## Run Metadata\n\n- **News Lead**: Cuba holds 100 years of Fidel memorial activities\n')
   write(HOME, 'index.json', JSON.stringify({
-    projects: [{ id, title: 'Fidel centennial commentary', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+    projects: [
+      { id: '2026-09-05-001', title: 'Fidel centennial commentary', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2026-09-05-002', title: 'Confirmed brief · research running', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    ],
+  }, null, 2))
+}
+
+function seedBriefFixture() {
+  const id = '2026-09-05-002'
+  const root = join(HOME, id)
+  write(root, 'input/news-lead.md', 'Cuba holds 100 years of Fidel memorial activities\n')
+  write(root, 'input/brief.md', 'Title: Fidel centennial brief\nSummary: Cuba nationwide 100-year memorial activities for Fidel Castro.\n')
+  write(root, 'materials/index.md', '# Materials Index\n\n| ID | URL | Title | Source Type | Credibility |\n|---|---|---|---|---|\n')
+  write(root, 'run.json', JSON.stringify({
+    schema_version: 'obv-1', mas_id: 'auctor', unit: id,
+    created_at: new Date().toISOString(), status: 'running', trigger: 'ui', runtime: 'dsh',
+    stages: [
+      { index: 0, id: 'brief', milestone: 'confirm', status: 'completed', started_at: null, finished_at: new Date().toISOString() },
+      { index: 1, id: 'research-init', milestone: 'research', status: 'active', started_at: new Date().toISOString(), finished_at: null },
+      { index: 2, id: 'research', milestone: 'research', status: 'active', started_at: new Date().toISOString(), finished_at: null },
+      { index: 3, id: 'summary', milestone: 'research', status: 'waiting', started_at: null, finished_at: null },
+      { index: 4, id: 'expert', milestone: 'expert', status: 'waiting', started_at: null, finished_at: null },
+      { index: 5, id: 'questions', milestone: 'deep', status: 'waiting', started_at: null, finished_at: null },
+      { index: 6, id: 'deep-research', milestone: 'deep', status: 'waiting', started_at: null, finished_at: null },
+      { index: 7, id: 'points', milestone: 'points', status: 'waiting', started_at: null, finished_at: null },
+      { index: 8, id: 'outline', milestone: 'outline', status: 'waiting', started_at: null, finished_at: null },
+      { index: 9, id: 'article', milestone: 'article', status: 'waiting', started_at: null, finished_at: null },
+    ],
   }, null, 2))
 }
 
 seedFixture()
+seedBriefFixture()
 execFileSync('dsh', ['--profile', 'web', '--help'], { env: { ...process.env, DSH_HOME }, stdio: 'ignore' })
 // 坞先装（bundles 先于 auctor，register 发生在 auctor apply 之前，auctor 才入坞）
 execFileSync('dsh', ['plugin', '--profile', 'web', 'add', join(ROOT, '..', 'dsh-app-dock')], { env: { ...process.env, DSH_HOME }, stdio: 'ignore' })

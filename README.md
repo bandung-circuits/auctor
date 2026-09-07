@@ -14,7 +14,7 @@ Replace `<profile>` with the target profile (e.g. `desktop`, `web`), then start 
 
 **For non-technical users**: install [DSH Desktop](https://dshdesktop.com/en/), then let the agent in dsh do it:
 
-> 帮我把 Auctor 插件装上，从 npm 包 dsh-auctor 装到当前 profile，需要的话重启，装好告诉我左下角有没有 Auctor 入口。
+> Install the Auctor plugin from the npm package `dsh-auctor` into the current profile. Restart if needed, then tell me when an Auctor entry appears in the bottom-left corner.
 
 ## Supported dsh version
 

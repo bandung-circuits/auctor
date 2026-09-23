@@ -14,20 +14,38 @@ async function check(name, fn) {
 function tmpDir() { return mkdtempSync(join(tmpdir(), 'auctor-verify-')) }
 
 async function bootFake(dataDir) {
-  let handler = null
+  let rpcHandler = null
   const running = new Map()
+  const webServer = {
+    register(route) {
+      if (route && route.kind === 'prefix' && route.path === '/auctor/rpc') rpcHandler = route.handler
+    },
+  }
   const ctx = {
     get: (n) => {
       if (n === 'agents') return { get: (sid) => ({ status: running.get(sid) ? 'running' : 'idle' }) }
       if (n === 'subagents') return null
+      if (n === 'webServer') return webServer
       return null
     },
-    connection: { rpc: { handle: (_p, fn) => { handler = fn } } },
+    webServer,
   }
   apply(ctx, { dataDir })
-  const call = async (ep, payload) => { const r = await handler(ep, payload || {}); if (!r.ok) throw new Error(r.error.message); return r.value }
+  const invoke = async (ep, payload) => {
+    const body = JSON.stringify(payload || {})
+    const req = {
+      method: 'POST',
+      url: '/auctor/rpc/' + encodeURIComponent(ep),
+      async *[Symbol.asyncIterator]() { yield Buffer.from(body) },
+    }
+    let out = ''
+    const res = { writeHead() {}, end(s) { out = s } }
+    await rpcHandler(req, res)
+    return JSON.parse(out)
+  }
+  const call = async (ep, payload) => { const r = await invoke(ep, payload); if (!r.ok) throw new Error(r.error.message); return r.value }
   const callErr = async (ep, payload) => {
-    const r = await handler(ep, payload || {})
+    const r = await invoke(ep, payload)
     if (r.ok) throw new Error('expected error, got ok')
     if (typeof (r.error && r.error.message) !== 'string') throw new Error('error.message not a string')
     return r.error.message

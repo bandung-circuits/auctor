@@ -463,20 +463,40 @@ export function apply(ctx: any, config: any = {}) {
     }
   }
 
-  const connection = ctx.connection || ctx.get?.('connection')
-  if (connection && connection.rpc && connection.rpc.handle) {
-    connection.rpc.handle('/auctor', async (endpoint: string, cp: any) => {
-      try {
-        return { ok: true, value: await handle(endpoint, cp || {}) }
-      } catch (e) {
-        logError(`rpc:${endpoint}`, e)
-        return { ok: false, error: { code: 'internal', message: String((e as Error)?.message || e), details: {} } }
-      }
-    }, { authority: 'loopback' })
-  }
-
-  const webServer = ctx.webServer || ctx.get?.('webServer')
+  // RPC：经 webServer 的 /auctor/rpc/* prefix 路由直接暴露 JSON-RPC（不再走
+  // connection.rpc.handle——0.1.5 起该桥 owner.webServer 属性访问会抛
+  // "cannot get property webServer without inject"，与 pomasa 同改 HTTP 直出）。
+  const webServer = ctx.get?.('webServer')
   if (webServer && webServer.register) {
+    // JSON-RPC：POST /auctor/rpc/<endpoint>，body=payload，返回 {ok,value}|{ok:false,error}。
+    webServer.register({
+      kind: 'prefix',
+      path: '/auctor/rpc',
+      handler: async (req: any, res: any) => {
+        try {
+          const pathname = new URL(req.url || '/', 'http://x').pathname
+          const endpoint = decodeURIComponent(pathname.slice('/auctor/rpc/'.length))
+          let payload: any = {}
+          if (req.method === 'POST' || req.method === 'PUT') {
+            const chunks: Buffer[] = []
+            for await (const c of req) chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c))
+            const raw = Buffer.concat(chunks).toString('utf8')
+            if (raw) payload = JSON.parse(raw)
+          }
+          try {
+            const value = await handle(endpoint, payload || {})
+            res.writeHead(200, { 'content-type': 'application/json' })
+            res.end(JSON.stringify({ ok: true, value }))
+          } catch (e) {
+            logError(`rpc:${endpoint}`, e)
+            res.writeHead(200, { 'content-type': 'application/json' })
+            res.end(JSON.stringify({ ok: false, error: { code: 'internal', message: String((e as Error)?.message || e), details: {} } }))
+          }
+        } catch {
+          res.writeHead(400); res.end('bad request')
+        }
+      },
+    })
     webServer.register({
       kind: 'exact',
       path: '/auctor/diag',

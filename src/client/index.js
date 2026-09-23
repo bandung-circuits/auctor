@@ -97,8 +97,13 @@ function t(key, vars) {
 
 // ---------- 工具 ----------
 
+// RPC 走 webServer 的 /auctor/rpc/* prefix 路由（同源 HTTP，不再经 connection.rpc.call）。
 function rpc(ctx, endpoint, payload) {
-  return ctx.connection.rpc.call(RPC, endpoint, payload === undefined ? {} : payload).then((result) => {
+  return fetch(RPC + '/rpc/' + encodeURIComponent(endpoint), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload === undefined ? {} : payload),
+  }).then((r) => r.json()).then((result) => {
     if (result && result.ok === false) {
       const msg = result.error && result.error.message ? result.error.message : String(result.error || 'RPC 调用失败')
       throw new Error(msg)
@@ -118,14 +123,27 @@ function diag(ctx, note) {
 // dsh ≥ 0.1.2-alpha.1 把 connectWorkspace 从 workspaces 移到 uiWorkspace。
 function sessionConnectFn(ctx, ws) {
   let uiWs = null
-  try { uiWs = ctx.uiWorkspace || ((ctx.get && ctx.get('uiWorkspace')) || null) } catch { /* ignore */ }
+  try { uiWs = (ctx.get && ctx.get('uiWorkspace')) || null } catch { /* ignore */ }
   return (uiWs && typeof uiWs.connectWorkspace === 'function')
     ? uiWs.connectWorkspace.bind(uiWs)
     : (ws && typeof ws.connectWorkspace === 'function') ? ws.connectWorkspace.bind(ws) : null
 }
 
+/**
+ * 从 workspaces.connectWorkspace / sessions.create 的返回里取 sessionId。
+ * 0.1.5 起 create/connectWorkspace 返回 {ok, value:{sessionId}} 信封；
+ * 早版本直接返回 id 字符串或 {id}。这里全兼容。
+ */
+function extractSid(created) {
+  if (!created) return null
+  if (typeof created === 'string') return created
+  return created.sessionId || created.id
+    || (created.value && (created.value.sessionId || created.value.id))
+    || null
+}
+
 async function auctorWorkspace(ctx) {
-  const ws = ctx.workspaces || (ctx.get && ctx.get('workspaces'))
+  const ws = (ctx.get && ctx.get('workspaces'))
   const base = await rpc(ctx, 'config.get').then((c) => (c && c.dataRoot) || '')
   if (!ws) throw new Error('会话服务不可用（workspaces）')
   const items = () => {
@@ -156,8 +174,8 @@ async function auctorWorkspace(ctx) {
 }
 
 async function driveProjectSession(ctx, prompt) {
-  const ws = ctx.workspaces || (ctx.get && ctx.get('workspaces'))
-  const sessionsSvc = ctx.sessions || (ctx.get && ctx.get('sessions'))
+  const ws = (ctx.get && ctx.get('workspaces'))
+  const sessionsSvc = (ctx.get && ctx.get('sessions'))
   const connect = sessionConnectFn(ctx, ws)
   const canCreate = !!(sessionsSvc && typeof sessionsSvc.create === 'function')
   if (!(connect || canCreate) || !(sessionsSvc && typeof sessionsSvc.binding === 'function')) {
@@ -167,7 +185,7 @@ async function driveProjectSession(ctx, prompt) {
   let sessionId
   try {
     const created = connect ? await connect(wid) : await sessionsSvc.create({ workspaceId: wid })
-    sessionId = created && typeof created === 'object' && created.id ? created.id : created
+    sessionId = extractSid(created)
   } catch (e) { throw new Error('创建会话失败：' + String((e && e.message) || e)) }
   const bound = sessionsSvc.binding(sessionId)
   const sess = bound && bound.session
@@ -179,7 +197,7 @@ async function driveProjectSession(ctx, prompt) {
 async function drivePrompt(ctx, id, message) {
   const p = await rpc(ctx, 'project.prompt', { id, message })
   if (p && p.sessionId) {
-    const sessionsSvc = ctx.sessions || (ctx.get && ctx.get('sessions'))
+    const sessionsSvc = (ctx.get && ctx.get('sessions'))
     if (sessionsSvc && typeof sessionsSvc.binding === 'function') {
       try {
         const bound = sessionsSvc.binding(p.sessionId)
@@ -1035,7 +1053,7 @@ function apply(ctx) {
       document.head.appendChild(style)
     }
   }
-  const slots = ctx.slots || (ctx.get && ctx.get('slots'))
+  const slots = (ctx.get && ctx.get('slots'))
   if (!slots) return
 
   const panel = { open: false, subs: new Set() }

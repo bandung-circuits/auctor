@@ -13,6 +13,9 @@ trap 'rm -rf "$BASE"' EXIT
 PKG_FILE="$(ls "$BASE"/*.tgz | head -1)"
 [ -n "$PKG_FILE" ] || { echo "FAIL: no tarball produced" >&2; exit 1; }
 
+LIST="$BASE/contents.txt"
+tar tzf "$PKG_FILE" > "$LIST"
+
 FAIL=0
 for need in \
   package/lib/index.js \
@@ -30,15 +33,15 @@ for need in \
   package/references/methodology/research-overview.md \
   package/assets/meme.jpg \
   package/README.md; do
-  if ! tar tzf "$PKG_FILE" | grep -qFx "$need"; then
+  if ! grep -qFx "$need" "$LIST"; then
     echo "FAIL: tarball missing $need" >&2
     FAIL=1
   fi
 done
 
 if [ "$FAIL" = "0" ]; then
-  echo "package integrity OK ($(basename "$PKG_FILE"), $(tar tzf "$PKG_FILE" | wc -l | tr -d ' ') entries)"
+  echo "package integrity OK ($(basename "$PKG_FILE"), $(wc -l < "$LIST" | tr -d ' ') entries)"
   exit 0
 fi
-tar tzf "$PKG_FILE" | awk -F/ '{print NF-1, $0}' | sort -n | head -40
+awk -F/ '{print NF-1, $0}' "$LIST" | sort -n | head -40
 exit 1

@@ -20,6 +20,8 @@ Replace `<profile>` with the target profile (e.g. `desktop`, `web`), then start 
 
 Built and tested against **DSH Desktop ≥0.10** (bundled Harness 0.2.x; verified against 0.2.0-rc.2 and 0.2.1-alpha.1), the same generation as dsh-pictor. Other versions may work or break without notice.
 
+Local CI: `bash scripts/ci.sh` runs the full suite (unit + host integration + package integrity + browser e2e) against the dsh version pinned in `scripts/dsh-version`. `npm run hooks:install` wires it to pre-push.
+
 ## Usage
 
 1. Open the workbench via the "Auctor" footer button.

@@ -18,7 +18,7 @@ Replace `<profile>` with the target profile (e.g. `desktop`, `web`), then start 
 
 ## Supported dsh version
 
-Built and tested against **DSH Desktop 0.9.0** (bundled Harness **0.1.5-rc.2**), the same generation as dsh-pictor. Other versions may work or break without notice.
+Built and tested against **DSH Desktop ≥0.10** (bundled Harness 0.2.x; verified against 0.2.0-rc.2 and 0.2.1-alpha.1), the same generation as dsh-pictor. Other versions may work or break without notice.
 
 ## Usage
 

@@ -2,7 +2,7 @@
 // 只断言界面展示与编辑保存，不触发真实会话驱动（保持确定性，无模型依赖）。
 // dsh web 的空态引导层（_mask/_root）会压住点击命中测试：所有交互统一用
 // 程序化 click（$eval），绕开几何拦截；断言仍走常规 locator。
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../auth'
 
 const click = (page, selector) => page.$eval(selector, (el) => el.click())
 

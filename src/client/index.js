@@ -34,7 +34,7 @@ const I18N = {
     downloadMd: '下载 Markdown', viewAll: '查看全部', materialTitle: '材料库', materialHint: 'materials/ 收录本项目的全部原文来源。',
     discussion: '讨论', discussHint: '给项目会话一句话：补充背景、要求调研究问题、换个方向重做要点/提纲/文章。你的决策会在同一会话继续。',
     discussPlaceholder: 'e.g. 把要点 3 换成侧重债务条款的博弈…', send: '发送', sentFlash: '已发送：{msg}…',
-    briefWorking: '正在理解事件并生成简介…', eventSummaryLabel: '事件确认', initTitle: '确认选题并生成项目', projectTitle: '项目名称', planTitle: '接下来的流程', nextStep: '下一步：确认选题', confirmStart: '确认并启动', starting: '启动中…', briefConfirmed: '选题已确认，研究推进中。按钮将带你进入研究进度页。', briefResearchDone: '选题已确认，快速研究已完成，流程在推进中。按钮可复看研究进度。', briefFailed: '选题已确认，但研究未完成。可进入研究进度页查看，并在讨论面板说明原因后重试。', goResearch: '查看研究进度 →', backStep: '返回修改', tocTitle: '目录', footnotesLabel: '脚注', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
+    briefWorking: '正在理解事件并生成简介…', briefRestartHint: 'Brief 尚未生成——上次会话可能没能启动。你的输入都在，点下方按钮重新启动会话即可。', briefRestart: '重新启动会话', briefRestarting: '正在启动会话…', eventSummaryLabel: '事件确认', initTitle: '确认选题并生成项目', projectTitle: '项目名称', planTitle: '接下来的流程', nextStep: '下一步：确认选题', confirmStart: '确认并启动', starting: '启动中…', briefConfirmed: '选题已确认，研究推进中。按钮将带你进入研究进度页。', briefResearchDone: '选题已确认，快速研究已完成，流程在推进中。按钮可复看研究进度。', briefFailed: '选题已确认，但研究未完成。可进入研究进度页查看，并在讨论面板说明原因后重试。', goResearch: '查看研究进度 →', backStep: '返回修改', tocTitle: '目录', footnotesLabel: '脚注', rename: '改名', deleteProject: '删除项目', delConfirm: '彻底删除项目「{t}」？项目目录与会话都将移除。',
     namePlaceholder: '项目标题', loading: '加载中…', error: '出错',
     gates: '四道门', markers: '阶段条可点击回看；修改已完成的上游产物后，下游需要你在讨论面板发起重做。',
   },
@@ -60,7 +60,7 @@ const I18N = {
     downloadMd: 'Download Markdown', viewAll: 'Show all', materialTitle: 'Materials', materialHint: 'materials/ holds the full-text sources of this project.',
     discussion: 'Discussion', discussHint: 'A line to the project session: add context, adjust questions, redo points/outline/article in a new direction. Decisions continue the same session.',
     discussPlaceholder: 'e.g. Replace point 3 with the debt-clause bargaining angle…', send: 'Send', sentFlash: 'Sent: {msg}…',
-    briefWorking: 'Understanding the event…', eventSummaryLabel: 'Event', initTitle: 'Confirm the brief & create', projectTitle: 'Project title', planTitle: 'What happens next', nextStep: 'Next: review', confirmStart: 'Confirm & start', starting: 'Starting…', briefConfirmed: 'Brief confirmed — research is running. This button takes you to the research progress.', briefResearchDone: 'Brief confirmed — research is complete, pipeline continues. This button reopens the research page.', briefFailed: 'Brief confirmed, but research did not complete. Open the research page, then retry from the discussion panel.', goResearch: 'View research →', backStep: 'Back', tocTitle: 'Contents', footnotesLabel: 'Footnotes', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
+    briefWorking: 'Understanding the event…', briefRestartHint: 'The brief was never generated — the last session may have failed to start. Your inputs are intact; click below to restart the session.', briefRestart: 'Restart session', briefRestarting: 'Starting session…', eventSummaryLabel: 'Event', initTitle: 'Confirm the brief & create', projectTitle: 'Project title', planTitle: 'What happens next', nextStep: 'Next: review', confirmStart: 'Confirm & start', starting: 'Starting…', briefConfirmed: 'Brief confirmed — research is running. This button takes you to the research progress.', briefResearchDone: 'Brief confirmed — research is complete, pipeline continues. This button reopens the research page.', briefFailed: 'Brief confirmed, but research did not complete. Open the research page, then retry from the discussion panel.', goResearch: 'View research →', backStep: 'Back', tocTitle: 'Contents', footnotesLabel: 'Footnotes', rename: 'Rename', deleteProject: 'Delete project', delConfirm: 'Delete project "{t}" permanently? Directory and session will be removed.',
     namePlaceholder: 'Project title', loading: 'Loading…', error: 'Error',
     gates: 'Gates', markers: 'The stage strip is clickable; after editing upstream artifacts, trigger a redo chain from the discussion panel.',
   },
@@ -173,12 +173,40 @@ async function auctorWorkspace(ctx) {
   return wid
 }
 
+/**
+ * 向会话投递 prompt。dsh 0.2.x 起 `sessions.binding(id)` 只对**已 retain**
+ * （scope 已 materialize）的会话有值：workspaces.connectWorkspace 返回 sessionId
+ * 后，视图侧要等导航流程里的 replaceMain 才 retain，紧接着 binding() 必是
+ * undefined——在 Harness 0.2.x 上就报「会话无 prompt 通道」。
+ * 这里自己持引用：优先 `sessions.using(id, {source}, ...)`（retain → await ready →
+ * prompt → release），老版本没有 using 再回落 `binding()`。
+ * （移植自 pictor PR #2 的同名修复。）
+ */
+async function promptSession(ctx, sessionsSvc, sessionId, text) {
+  const content = [{ type: 'text', text: String(text || '') }]
+  const fail = (detail) => new Error(`会话无 prompt 通道（${detail}）`)
+  if (sessionsSvc && typeof sessionsSvc.using === 'function') {
+    await sessionsSvc.using(sessionId, { source: 'auctorSession' }, async (ref) => {
+      await ref.ready
+      const sess = ref.binding && ref.binding.session
+      if (!sess || typeof sess.prompt !== 'function') throw fail('using/binding.session.prompt')
+      await sess.prompt(content, 'queue')
+    })
+    return
+  }
+  const bound = sessionsSvc && typeof sessionsSvc.binding === 'function' ? sessionsSvc.binding(sessionId) : null
+  const sess = bound && bound.session
+  if (!sess || typeof sess.prompt !== 'function') throw fail('binding.session.prompt')
+  await sess.prompt(content, 'queue')
+}
+
 async function driveProjectSession(ctx, prompt) {
   const ws = (ctx.get && ctx.get('workspaces'))
   const sessionsSvc = (ctx.get && ctx.get('sessions'))
   const connect = sessionConnectFn(ctx, ws)
   const canCreate = !!(sessionsSvc && typeof sessionsSvc.create === 'function')
-  if (!(connect || canCreate) || !(sessionsSvc && typeof sessionsSvc.binding === 'function')) {
+  const canPrompt = !!(sessionsSvc && (typeof sessionsSvc.using === 'function' || typeof sessionsSvc.binding === 'function'))
+  if (!(connect || canCreate) || !canPrompt) {
     throw new Error('会话服务不可用（workspaces）')
   }
   const wid = await auctorWorkspace(ctx)
@@ -187,10 +215,7 @@ async function driveProjectSession(ctx, prompt) {
     const created = connect ? await connect(wid) : await sessionsSvc.create({ workspaceId: wid })
     sessionId = extractSid(created)
   } catch (e) { throw new Error('创建会话失败：' + String((e && e.message) || e)) }
-  const bound = sessionsSvc.binding(sessionId)
-  const sess = bound && bound.session
-  if (!sess || typeof sess.prompt !== 'function') throw new Error('会话无 prompt 通道')
-  await sess.prompt([{ type: 'text', text: String(prompt || '') }], 'queue')
+  await promptSession(ctx, sessionsSvc, sessionId, prompt)
   return sessionId
 }
 
@@ -198,15 +223,11 @@ async function drivePrompt(ctx, id, message) {
   const p = await rpc(ctx, 'project.prompt', { id, message })
   if (p && p.sessionId) {
     const sessionsSvc = (ctx.get && ctx.get('sessions'))
-    if (sessionsSvc && typeof sessionsSvc.binding === 'function') {
+    if (sessionsSvc && (typeof sessionsSvc.using === 'function' || typeof sessionsSvc.binding === 'function')) {
       try {
-        const bound = sessionsSvc.binding(p.sessionId)
-        const sess = bound && bound.session
-        if (sess && typeof sess.prompt === 'function') {
-          await sess.prompt([{ type: 'text', text: String(message || '') }], 'queue')
-          await rpc(ctx, 'project.attach', { id, sessionId: p.sessionId })
-          return p.sessionId
-        }
+        await promptSession(ctx, sessionsSvc, p.sessionId, message)
+        await rpc(ctx, 'project.attach', { id, sessionId: p.sessionId })
+        return p.sessionId
       } catch { /* 会话对象失效则回落到新建 */ }
     }
   }
@@ -335,7 +356,13 @@ function ArtifactText({ title, text, hint, onSave, onConfirm, confirmLabel, busy
   )
 }
 
-function BriefPane({ data, onConfirm, onManual, busy, researchStarted, researchFailed, researchStatus, onNext }) {
+function initialBriefMsg() {
+  return langStore.val === 'en'
+    ? 'Phase 0 (Brief): read agents/00.brief.md and execute it strictly per that Blueprint. Inputs are input/news-lead.md and input/editor-notes.md. Write input/brief.md, then stop.'
+    : '第一阶段（Brief）：严格按 agents/00.brief.md 蓝图执行。输入见 input/news-lead.md 与 input/editor-notes.md。写入 input/brief.md 后停下。'
+}
+
+function BriefPane({ data, onConfirm, onManual, busy, researchStarted, researchFailed, researchStatus, onNext, onRestart }) {
   const [title, setTitle] = React.useState('')
   const [touched, setTouched] = React.useState(false)
   const brief = (data.texts && data.texts.brief) || ''
@@ -354,7 +381,11 @@ function BriefPane({ data, onConfirm, onManual, busy, researchStarted, researchF
   if (!brief) {
     return h('div', { className: 'au-pane' },
       h('h3', { className: 'au-pane-title' }, t('stageConfirm')),
-      h('p', { className: 'au-pane-hint' }, t('briefWorking')))
+      h('p', { className: 'au-pane-hint' }, t('briefWorking')),
+      onRestart ? h('div', null,
+        h('p', { className: 'au-note' }, t('briefRestartHint')),
+        h('button', { className: 'au-btn primary', disabled: busy, onClick: onRestart },
+          busy ? t('briefRestarting') : t('briefRestart'))) : null)
   }
   return h('div', { className: 'au-pane' },
     h('h3', { className: 'au-pane-title' }, t('stageConfirm')),
@@ -843,6 +874,7 @@ function DetailPane({ ctx, id }) {
       case 'confirm': return h(BriefPane, {
         data,
         busy,
+        onRestart: async () => { await drive(initialBriefMsg()) },
         researchStarted: briefConfirmed || mSt('research') !== 'waiting',
         researchFailed: mSt('research') === 'failed',
         researchStatus: mSt('research'),
@@ -958,9 +990,7 @@ function NewProjectPane({ ctx, onCreate }) {
   const [notes, setNotes] = React.useState('')
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState('')
-  const briefMsg = () => (langStore.val === 'en'
-    ? 'Phase 0 (Brief): read agents/00.brief.md and execute it strictly per that Blueprint. Inputs are input/news-lead.md and input/editor-notes.md. Write input/brief.md, then stop.'
-    : '第一阶段（Brief）：严格按 agents/00.brief.md 蓝图执行。输入见 input/news-lead.md 与 input/editor-notes.md。写入 input/brief.md 后停下。')
+  const briefMsg = initialBriefMsg
   const submit = async () => {
     if (!lead.trim()) return
     setBusy(true); setErr('')

@@ -858,3 +858,51 @@ cultural resistance, liberation art, resistance literature, cultural front, memo
 ---
 
 *This style guide was derived from systematic linguistic analysis of Tricontinental: Institute for Social Research dossiers. Apply these guidelines to produce writing consistent with the Tricontinental dossier voice: scholarly, partisan, historically grounded, and committed to the standpoint of the oppressed.*
+
+---
+
+## Appendix: Exemplar Passages (Few-Shot)
+
+The passages below are verbatim excerpts from Tricontinental dossiers, selected as positive few-shot anchors. When the prescriptive rules above and these exemplars pull in the same direction, treat the exemplars as the target texture of the prose. They demonstrate what compliance *reads like* — the rhythm, the movement between narrative, data, testimony and argument, and the way evaluative force is carried by evidence rather than by rhetoric.
+
+**Rules of use:**
+- These are models of register and construction, not text to imitate sentence-by-sentence. Never reproduce any of these sentences (or close paraphrases of them) in an article.
+- Study how each passage does what it does: what the opening sentence accomplishes, where the evidence sits, how the paragraph ends.
+
+### E.1 Historical narrative as argument (opening a section)
+
+> From the 1830s onwards, opium grown in India was smuggled into Qing China in ever-larger quantities. Produced under the British East India Company's opium monopoly in India and sold at auction to private traders, it then moved through smuggling networks along the Chinese coast. In the aftermath of the two Opium Wars fought between Britain and the Qing empire (1839–1842 and 1856–1860, with France joining Britain in the second), the trade was entrenched and its reach widened, flooding the Chinese market with opium. This allowed Britain to use the silver it received from opium sales in China to finance its tea purchases, reversing the bullion outflow and turning the China trade profitable.
+
+*What to learn:* a section can open with pure periodised narrative and still be an argument — every clause is doing analytical work (monopoly, entrenchment, reversal of flows). Dates and actors are specific; no framing sentence announces what the paragraph will show.
+
+### E.2 Structural argument carried by concrete imagery
+
+> Originary accumulation is not a one-off prelude that sets in place a perpetual motion machine. It can be understood as periodic: originary accumulation resumes once more whenever capital, starved of liquidity, seeks out new reservoirs to satisfy its need -- much as a vampire seeks fresh blood for its sustenance.
+
+*What to learn:* vivid imagery (the vampire) is permitted and powerful, but it rides on top of a precise theoretical claim and a defined mechanism ("whenever capital, starved of liquidity"). The image compresses the argument; it does not replace it. Note the brevity of the first sentence: a short declarative sets up the longer construction.
+
+### E.3 Data-dense analysis with calibrated hedging
+
+> According to one estimate, in 2015 the unequal exchange of goods and services between the Global North and the Global South totalled $10.8–$14.1 trillion (enough to end extreme poverty 70 times over). This is a vast number that has not been fully digested by those who shape policy. It means that every year, over $10 trillion of wealth is drained from the South to the North, mostly legally.
+
+*What to learn:* the figure is attributed, hedged as "one estimate", and given in a range — and in the same breath translated into political meaning ("enough to end extreme poverty 70 times over"). Numbers are never left to speak for themselves; the sentence after the datum interprets it. This is what dense quantitative writing looks like in this voice: exact, attributed, and immediately meaningful.
+
+### E.4 Testimony as evidence, framed and integrated
+
+> Coca production locks households into economic dependence and highly informal work throughout the year, since the mature coca leaf is harvested every two months. [...] Our joint research with the National Coordination of Coca, Poppy, and Marijuana Growers (COCCAM) found that not only is production labour intensive and time consuming, but the rate of return for peasants is negligible. According to one COCCAM leader:
+
+> > When we finish the whole process, we are practically ready to start again. So, it is constant... The coca is planted, and after six months it is ready for the first harvest, and then it is harvested every two months, which means that every two months there is a product.
+
+*What to learn:* the analytical claim comes first, the testimony then confirms it in a worker's own words. The frame sentence ("According to one COCCAM leader:") is minimal. The quote is left unpolished — its roughness is part of its authority. The institute's "we" appears naturally ("Our joint research") to ground the claim in shared work, not in the quote itself.
+
+### E.5 Conclusion with programmatic force
+
+> If the objective is to end the violence and the economic dependence on coca cultivation, then the starting point must be neither militarisation nor eradication but the reconstruction of rural life: land reform, guaranteed prices for licit crops, infrastructure, public services, and political rights for those who cultivate the soil. Without transforming the social and economic conditions that push families into illicit agriculture, the cycle will simply reproduce itself. Without confronting the financial institutions that launder the proceeds, the global drug economy will continue to function as an unofficial pillar of capitalist liquidity.
+
+*What to learn:* the conclusion states demands concretely (a list of specific policies, not slogans), driven by a conditional structure ("If the objective is... then the starting point must be...") and two parallel negative constructions that each name a mechanism, not a mood. No summary of the article; the argument moves forward to what must be done.
+
+### E.6 Naming the dominant narrative to break it
+
+> This dossier seeks to undermine the dominant narrative that presents the 'War on Drugs' as a genuine moral crusade by the capitalist states to prohibit the circulation of illicit narcotics. This narrative rests on the claim that the drug trade is somehow separate from 'legitimate' capitalism. We argue instead that the War on Drugs is merely an attempt by capitalist states to ensure that these narcotics circuits remain underground so that the money siphoned from illegal trade can continue to liquefy a banking system that would not function without it.
+
+*What to learn:* the counter-position is stated fairly and precisely ("This narrative rests on the claim that...") before it is overturned. The overturning sentence ("We argue instead...") is one long clause that carries the full structural explanation — the institutional "we" appears exactly at the moment of commitment. This is how the voice disagrees: by out-explaining, not by scoring points.
